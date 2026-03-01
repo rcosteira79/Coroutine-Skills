@@ -20,6 +20,7 @@ Before writing or modifying any coroutine code:
 3. Identify exception handling patterns in use
 4. **If approach is sound:** match it
 5. **If approach violates rules below:** explain why to the user, recommend the correct approach, and let them decide before changing anything — do NOT produce code that follows the bad pattern
+6. **Beyond violations:** also look for places where the patterns in this skill could simplify existing code — manual scope management that structured concurrency could clean up, unnecessary coroutine overhead, etc.
 
 ## Dispatcher Selection
 

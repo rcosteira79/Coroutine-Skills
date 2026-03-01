@@ -17,6 +17,7 @@ Before writing or modifying any flow code:
 2. Identify which flow types are used and how they are collected
 3. **If approach is sound:** match it
 4. **If approach violates rules below:** explain why to the user, recommend the correct approach, and let them decide — do NOT produce code that follows the bad pattern
+5. **Beyond violations:** also look for places where the operators and patterns in this skill could simplify existing code — manual `Job?` patterns that `flatMapLatest` could replace, flows collected inside transforms that `combine` could clean up, etc.
 
 ## Step 2: Channel Audit
 
@@ -124,7 +125,7 @@ For third-party SDKs without a deregistration API: use a flag inside `awaitClose
 | Transform each value | `map` |
 | Filter values | `filter` |
 | Side effects without transformation | `onEach` — never `map` for side effects |
-| Cancel previous on new emission | `flatMapLatest` — search queries, user input; cancels in-flight work — never use for writes or mutations |
+| Cancel previous on new emission | `flatMapLatest` — search queries, user input; cancels in-flight work — never use for writes or mutations. Also the fix for manual `Job?` cancellation + re-launch patterns (see pitfalls) |
 | Process all concurrently | `flatMapMerge` — parallel independent work |
 | Process sequentially in order | `flatMapConcat` — ordered operations |
 | Debounce rapid input | `debounce(ms)` |
@@ -301,6 +302,10 @@ lifecycleScope.launch {
 | `SharingStarted.Eagerly` in ViewModel | Use `WhileSubscribed(5_000)` to stop flow when no subscribers |
 | `StateFlow` for one-shot events (replays on resubscription) | Use `SharedFlow(replay = 0)` |
 | `try { } catch (e: Exception)` inside `collect {}` or flow builders | Swallows `CancellationException` — use the `.catch` operator or catch specific types only |
+| `viewModelScope.launch {}` or effect emission inside a `combine`/`map` transform | Transform lambdas are pure — they re-execute on every resubscription (e.g. rotation), causing effects to fire repeatedly. Move side effects to `onEach` or a dedicated event handler outside the transform |
+| Collecting a flow with `.firstOrNull()` / `.first()` inside a `map` or `combine` lambda | Hidden sequential call that re-fetches on every upstream emission — use `combine` to merge both flows reactively |
+| Manual `Job?` cancellation + re-launch to restart a collection on new upstream value | Use `flatMapLatest` — it cancels the previous inner collection automatically when the upstream emits |
+| `mutableStateFlow.emit(value)` inside a coroutine | `emit()` on `MutableStateFlow` is suspending but equivalent to `.value = value` — use `.value =` instead; `emit()` misleads readers and adds unnecessary suspension |
 
 ## Testing
 
