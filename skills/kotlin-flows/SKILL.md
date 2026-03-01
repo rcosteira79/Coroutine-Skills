@@ -134,6 +134,9 @@ For third-party SDKs without a deregistration API: use a flag inside `awaitClose
 | Change upstream execution context | `flowOn(dispatcher)` |
 | Convert cold flow to hot StateFlow | `stateIn(scope, started, initialValue)` |
 | Convert cold flow to hot SharedFlow | `shareIn(scope, started, replay)` |
+| Combine latest values from multiple flows | `combine(flowA, flowB) { a, b -> }` — emits when **any** upstream emits; use for derived UI state from multiple StateFlows |
+| Pair emissions one-to-one across flows | `zip(flowA, flowB) { a, b -> }` — waits for both to emit before combining; use when pairings must align |
+| Cancel previous collector block on new emission | `collectLatest { }` — use when processing a new item should cancel processing the previous one (e.g. updating UI) |
 
 ## StateFlow Patterns
 
@@ -159,6 +162,10 @@ class NewsViewModel : ViewModel() {
     }
 }
 ```
+
+**`stateIn` vs `MutableStateFlow` — when to use which:**
+- **`stateIn`** — when a repository or data layer exposes a cold `Flow` and the ViewModel wants to expose it as a `StateFlow`. The flow drives the state; the ViewModel doesn't write to it directly.
+- **`MutableStateFlow`** — when the ViewModel drives state imperatively: loading results, reacting to user actions, combining multiple sources. The ViewModel owns and writes to the state.
 
 **`stateIn` sharing strategies:**
 - `SharingStarted.WhileSubscribed(5_000)` — stops when no collectors, survives config changes; use in ViewModels

@@ -200,6 +200,24 @@ launch {
 - `yield()` — suspends, checks cancellation, and lets other coroutines run
 - All `kotlinx.coroutines` suspend functions (`delay`, `withContext`) are already cancellable — no extra check needed
 
+**Cleanup that must survive cancellation** — use `withContext(NonCancellable)`:
+
+```kotlin
+launch {
+    try {
+        doWork()
+    } finally {
+        // This block runs even if the coroutine was cancelled,
+        // but without NonCancellable it cannot call suspend functions
+        withContext(NonCancellable) {
+            db.saveCheckpoint() // suspend call safe here
+        }
+    }
+}
+```
+
+Use `NonCancellable` only in `finally` blocks for cleanup. Never use it as a general escape hatch from cancellation.
+
 ## Exception Handling
 
 ```kotlin
@@ -285,6 +303,8 @@ class LatestNewsViewModel(private val getLatestNews: GetLatestNewsUseCase) : Vie
 | No cancellation check in long loop | Add `ensureActive()` at start of each iteration |
 | Calling blocking I/O directly in coroutine body | Wrap with `withContext(ioDispatcher) { ... }` |
 | `suspend fun` for business logic in ViewModel | ViewModel should use `viewModelScope.launch` and expose `StateFlow` |
+| Explicit `SupervisorJob()` added to a ViewModel alongside `viewModelScope` | `viewModelScope` already uses `SupervisorJob` internally — flag to user, the extra `SupervisorJob` is redundant and may create a detached scope |
+| `async {}` result never awaited in `supervisorScope` | Exceptions in unawaited `async {}` are silently swallowed — use `launch {}` if you don't need the result |
 
 ## Testing
 

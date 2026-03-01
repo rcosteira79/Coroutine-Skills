@@ -152,7 +152,7 @@ flow.retryWhen { cause, attempt ->
 | `Flowable` → `Flow` without backpressure | Add `buffer()` or `conflate()` to match original strategy |
 | `BehaviorSubject` → `SharedFlow` (loses initial value) | Use `MutableStateFlow` with initial value instead |
 | Hot `Observable` → `Flow` (now cold) | Use `SharedFlow` or `StateFlow` to maintain hot semantics |
-| Missing `CompositeDisposable` replacement | Use `CoroutineScope` — cancellation is automatic |
+| `compositeDisposable.clear()` in `onCleared()` | Remove entirely — `viewModelScope` is automatically cancelled when the ViewModel is cleared; no manual cleanup needed |
 | `onErrorResumeNext` → `catch {}` swallowing `CancellationException` | `catch { e -> if (e is CancellationException) throw e else emit(fallback) }` |
 | `subscribeOn` + `observeOn` both become `flowOn` | `flowOn` applies upstream only — restructure accordingly; `observeOn(main)` becomes caller responsibility |
 | `retry(n) { attempt -> }` treating attempt as an index | `attempt` in the predicate is the `Throwable`, not a count — use `retryWhen { cause, attempt -> }` |
