@@ -138,6 +138,67 @@ For third-party SDKs without a deregistration API: use a flag inside `awaitClose
 | Pair emissions one-to-one across flows | `zip(flowA, flowB) { a, b -> }` — waits for both to emit before combining; use when pairings must align |
 | Cancel previous collector block on new emission | `collectLatest { }` — use when processing a new item should cancel processing the previous one (e.g. updating UI) |
 
+## Error Handling
+
+### `.catch` — upstream errors only
+
+`.catch` intercepts exceptions thrown **upstream** in the flow. It does not catch exceptions thrown inside the `collect {}` block. Unlike `try/catch`, it does not intercept `CancellationException`.
+
+```kotlin
+// Emit a fallback on upstream error
+repository.getItems()
+    .catch { e -> emit(emptyList()) }
+    .collect { items -> updateUi(items) }
+
+// Rethrow after logging
+repository.getItems()
+    .catch { e ->
+        logger.error(e)
+        throw e
+    }
+    .collect { items -> updateUi(items) }
+
+// .catch does NOT cover collector errors — these propagate to the coroutine scope
+repository.getItems()
+    .catch { e -> /* does not catch exceptions thrown below */ }
+    .collect { items ->
+        riskyOperation(items) // exception here escapes .catch
+    }
+
+// For collector errors, use try/catch inside collect
+repository.getItems()
+    .collect { items ->
+        try {
+            riskyOperation(items)
+        } catch (e: SpecificException) {
+            handleError(e)
+        }
+    }
+```
+
+### `retry` / `retryWhen`
+
+```kotlin
+// retry — resubscribes on predicated exception, up to n times
+repository.getItems()
+    .retry(3) { cause -> cause is IOException }
+    .collect { ... }
+
+// retryWhen — stateful retry with attempt count and delay
+repository.getItems()
+    .retryWhen { cause, attempt ->
+        if (cause is IOException && attempt < 3) {
+            delay((attempt + 1) * 1_000L)
+            true  // retry
+        } else {
+            false // give up
+        }
+    }
+    .collect { ... }
+```
+
+`attempt` is the 0-based retry index. `cause` is the exception. Always guard both — without a count check, the flow retries forever.
+
 ## StateFlow Patterns
 
 **Never expose `MutableStateFlow` publicly.** Even when the existing codebase does it, do NOT add new usages — flag it to the user and recommend the correct pattern.

@@ -218,6 +218,28 @@ launch {
 
 Use `NonCancellable` only in `finally` blocks for cleanup. Never use it as a general escape hatch from cancellation.
 
+## Timeouts
+
+**Only use `withTimeout`/`withTimeoutOrNull` when:**
+- The codebase already uses them — match the pattern, or
+- The user explicitly asks to short-circuit an operation and return a default after a time limit
+
+**Do not** suggest them for network timeouts — network libraries (OkHttp, Retrofit, Ktor) expose their own timeout configuration, which is the right place for that.
+
+```kotlin
+// withTimeout — throws TimeoutCancellationException if the block exceeds the limit
+val config = withTimeout(5_000) {
+    remoteConfig.fetchAndActivate()
+}
+
+// withTimeoutOrNull — returns null instead of throwing; use when a missing result is acceptable
+val config = withTimeoutOrNull(5_000) {
+    remoteConfig.fetchAndActivate()
+} ?: defaultConfig
+```
+
+`TimeoutCancellationException` is a `CancellationException` — never catch it without rethrowing, and never wrap a `withTimeout` block in `catch (e: Exception)`.
+
 ## Exception Handling
 
 ```kotlin
