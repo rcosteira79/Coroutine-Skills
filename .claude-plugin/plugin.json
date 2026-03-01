@@ -5,6 +5,8 @@
   "author": {
     "name": "Ricardo Costeira"
   },
+  "homepage": "https://github.com/rcosteira79/Coroutine-Skills",
+  "repository": "https://github.com/rcosteira79/Coroutine-Skills",
   "license": "MIT",
   "keywords": ["kotlin", "coroutines", "flows", "rxjava", "android", "kmp"]
 }
