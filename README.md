@@ -61,6 +61,13 @@ The skills are plain markdown files. Copy the content of whichever `SKILL.md` fi
 
 Each skill is self-contained and can be used independently.
 
+## Inspiration
+
+These skills drew inspiration from:
+
+- [awesome-android-agent-skills](https://github.com/new-silvermoon/awesome-android-agent-skills)
+- [compose-skill](https://github.com/aldefy/compose-skill)
+
 ## License
 
 MIT
