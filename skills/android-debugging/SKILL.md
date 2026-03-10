@@ -1,0 +1,171 @@
+---
+name: android-debugging
+description: Use when debugging Android or KMP issues — supplements superpowers:systematic-debugging with Android-specific techniques: Logcat, ADB, ANR traces, R8 stack trace decoding, memory leaks, Gradle build failures, and Compose recomposition bugs.
+---
+
+# Android Debugging
+
+## Overview
+
+Extends `superpowers:systematic-debugging` with Android-specific evidence-gathering and investigation techniques.
+
+**REQUIRED BACKGROUND:** You MUST follow `superpowers:systematic-debugging`. Complete Phase 1 (root cause investigation) before attempting any fix. This skill provides Android-specific tools for each phase.
+
+## Evidence-Gathering by Problem Type
+
+### Crashes & Exceptions
+
+```bash
+# Stream crash logs filtered by app package
+adb logcat --pid=$(adb shell pidof -s com.example.app)
+
+# Save full logcat to file for analysis
+adb logcat -d > crash_log.txt
+
+# Filter by tag
+adb logcat -s "YourTag:E"
+```
+
+Key logcat log levels: `V` (verbose) `D` (debug) `I` (info) `W` (warn) `E` (error) `F` (fatal)
+
+Read the **full stack trace** — the root cause is usually at the bottom of the `Caused by:` chain, not the top-level exception.
+
+### ANR (Application Not Responding)
+
+ANRs mean the main thread was blocked. Evidence:
+
+```bash
+# Pull ANR trace from device
+adb pull /data/anr/traces.txt ./anr_traces.txt
+
+# Or stream while reproducing
+adb logcat -s "ActivityManager:E" | grep -A 30 "ANR in"
+```
+
+Look for: `main` thread in state `MONITOR` (waiting for a lock) or blocking I/O on `main`. Trace backward to find what holds the lock.
+
+**Common causes:** Database/network call on main thread, `runBlocking` on main thread, deadlock between coroutine scopes.
+
+### Memory Leaks
+
+Add [LeakCanary](https://square.github.io/leakcanary/) to `debugImplementation`. It surfaces leak traces automatically in a notification.
+
+Read the leak trace top-to-bottom: the first bold line is the leaking object, the path shows what's holding the reference. Fix by clearing the reference in the appropriate lifecycle callback.
+
+```bash
+# Dump heap manually for Android Profiler analysis
+adb shell am dumpheap com.example.app /data/local/tmp/heap.hprof
+adb pull /data/local/tmp/heap.hprof ./heap.hprof
+```
+
+### R8 / ProGuard — Obfuscated Stack Traces
+
+Release crash stack traces are obfuscated. Decode them with the mapping file generated at build time.
+
+```bash
+# retrace a crash (AGP 7+)
+./gradlew :app:retrace --stacktrace-file crash.txt
+
+# Or use the retrace CLI directly
+java -jar retrace.jar mapping.txt crash.txt
+```
+
+Mapping files are in `app/build/outputs/mapping/<variant>/mapping.txt`. Always archive them alongside release builds.
+
+If a class is unexpectedly removed or renamed, add a `-keep` rule in `proguard-rules.pro` and verify with:
+
+```bash
+./gradlew :app:assembleRelease
+# Then inspect: app/build/outputs/mapping/release/usage.txt (removed) and seeds.txt (kept)
+```
+
+### Gradle Build Failures
+
+Read the error from the **bottom up** — Gradle wraps errors in multiple layers.
+
+Common patterns:
+
+| Error | Investigation |
+|-------|--------------|
+| `Manifest merger failed` | Check `app/build/intermediates/merged_manifests/` for the merged output; look for conflicting `android:` attributes |
+| `Duplicate class` | Run `./gradlew dependencies` and look for the same class in multiple transitive deps; use `exclude` or force a version |
+| `Could not resolve` | Check repository declarations, VPN/proxy, dependency version exists |
+| `D8/R8: Type not present` | Missing `keep` rule or desugaring issue; check `minSdk` vs API used |
+| `KSP / KAPT error` | Look for the processor's own error above the Gradle wrapper message |
+
+```bash
+# Full dependency tree for a configuration
+./gradlew :app:dependencies --configuration releaseRuntimeClasspath
+
+# Run with stacktrace for deeper Gradle errors
+./gradlew assembleDebug --stacktrace --info 2>&1 | grep -A 20 "FAILED"
+```
+
+### Compose Recomposition Bugs
+
+Wrong state or unexpected re-renders:
+
+1. **Layout Inspector** (Android Studio) → enable "Show recomposition counts" to identify hot paths
+2. Add `SideEffect { Log.d("Recompose", "MyComposable recomposed") }` temporarily to confirm
+3. Check that `State` objects are not created inside the composition (use `remember`)
+4. Verify `equals()` on state data classes — a new object with same values still triggers recomposition if `equals` is not implemented
+
+```kotlin
+// BAD: creates new lambda every recomposition -> child always recomposes
+MyButton(onClick = { viewModel.doAction() })
+
+// GOOD: stable lambda reference
+val onClickAction = remember { { viewModel.doAction() } }
+MyButton(onClick = onClickAction)
+```
+
+## ADB Quick Reference
+
+```bash
+# List connected devices
+adb devices
+
+# Install APK
+adb install -r app-debug.apk
+
+# Launch activity
+adb shell am start -n com.example.app/.MainActivity
+
+# Clear app data
+adb shell pm clear com.example.app
+
+# Take screenshot
+adb exec-out screencap -p > screen.png
+
+# View running processes
+adb shell ps | grep com.example
+
+# Check app's SharedPreferences / databases
+adb shell run-as com.example.app ls /data/data/com.example.app/
+```
+
+## Multi-Component Evidence Template
+
+For issues spanning multiple layers (e.g. Repository → ViewModel → UI):
+
+```kotlin
+// Temporarily instrument each boundary
+class UserRepository(...) {
+    suspend fun fetchUser(id: String): User {
+        Log.d("DEBUG_LAYER", "Repository: fetching user $id")
+        val result = api.getUser(id)
+        Log.d("DEBUG_LAYER", "Repository: received ${result}")
+        return result
+    }
+}
+```
+
+Run once to identify **which layer** produces the bad value. Then investigate that layer in isolation before proposing a fix.
+
+## Red Flags
+
+- Fixing a crash without reading the full `Caused by:` chain
+- Guessing at an R8 issue without checking the mapping file
+- Adding `Thread.sleep()` to "fix" an ANR or race condition
+- Resolving a dependency conflict by adding `exclude` without understanding why the duplicate exists
+- Fixing a Compose bug by wrapping in `key()` without understanding what triggers recomposition

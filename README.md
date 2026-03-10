@@ -1,14 +1,29 @@
-# Kotlin Skills for Claude Code
+# Android Skills for Claude Code
 
-Claude Code skills for Kotlin coroutines, flows, and RxJava migration — covering Android and KMP projects.
+Claude Code skills for Android and KMP development — covering architecture, testing, debugging, Jetpack Compose, coroutines, flows, and RxJava migration.
 
 ## Skills
 
+### `android-dev`
+Senior Android engineering knowledge and best practices for Android and KMP projects. Covers architecture, code quality, and platform-specific patterns.
+
+### `android-tdd`
+Test-driven development for Android/KMP — extends TDD with Android's three-tier test model, fake-first strategy, coroutine testing, and Compose UI testing.
+
+### `android-debugging`
+Debugging Android and KMP issues — Logcat, ADB, ANR traces, R8 stack trace decoding, memory leaks, Gradle build failures, and Compose recomposition bugs.
+
+### `jetpack-compose-expert-skill`
+Jetpack Compose expert guidance — state management (`@Composable`, `remember`, `mutableStateOf`, `derivedStateOf`, state hoisting), Modifier chains, lazy lists, navigation, animation, side effects, theming, accessibility, and performance optimization.
+
+### `aosp-search`
+Verify Android framework internals, find `@hide` APIs and internal constants, confirm underdocumented behavior, and trace how framework classes actually implement things.
+
 ### `kotlin-coroutines`
-Dispatcher selection, scope management, structured concurrency, cancellation, exception handling, and Android/KMP patterns. Includes the DispatcherProvider pattern for testable dispatcher injection.
+Dispatcher selection, scope management, structured concurrency, cancellation, exception handling, and Android/KMP async patterns. Includes the DispatcherProvider pattern for testable dispatcher injection.
 
 ### `kotlin-flows`
-Flow type selection (Flow/StateFlow/SharedFlow), operator chains, callback bridging, lifecycle-safe collection, Channel migration, and UI state management.
+Flow type selection (`Flow`/`StateFlow`/`SharedFlow`), operator chains, callback bridging, lifecycle-safe collection, Channel migration, and UI state management.
 
 ### `rxjava-migration`
 Triggered only when you explicitly ask to migrate. Assesses complexity, maps RxJava types and operators to coroutines equivalents, and provides interop patterns for incremental migration.
@@ -20,12 +35,17 @@ Triggered only when you explicitly ask to migrate. Assesses complexity, maps RxJ
 Copy the skill directories into your Claude Code skills folder:
 
 ```bash
-git clone https://github.com/rcosteira79/coroutine-skills.git
-cp -r coroutine-skills/skills/* ~/.claude/skills/
+git clone https://github.com/rcosteira79/android-skills.git
+cp -r android-skills/skills/* ~/.claude/skills/
 ```
 
 Skills are invoked automatically based on context:
 
+- Working on Android or KMP code → `android-dev` skill activates
+- Writing or fixing tests → `android-tdd` skill activates
+- Debugging Android issues → `android-debugging` skill activates
+- Working with Compose → `jetpack-compose-expert-skill` activates
+- Verifying framework internals → `aosp-search` skill activates
 - Working with coroutines → `kotlin-coroutines` skill activates
 - Working with Flow/StateFlow/SharedFlow → `kotlin-flows` skill activates
 - Migrating from RxJava → ask Claude to migrate, `rxjava-migration` skill activates
