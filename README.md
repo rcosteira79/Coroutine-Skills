@@ -19,8 +19,8 @@ Debugging Android and KMP issues — Logcat, ADB, ANR traces, R8 stack trace dec
 ### `compose`
 Jetpack Compose expert guidance — state management (`@Composable`, `remember`, `mutableStateOf`, `derivedStateOf`, state hoisting), Modifier chains, lazy lists, navigation, animation, side effects, theming, accessibility, and performance optimization.
 
-### `aosp-search`
-Verify Android framework internals, find `@hide` APIs and internal constants, confirm underdocumented behavior, and trace how framework classes actually implement things.
+### `android-source-search`
+Fetch and verify Android source code — AOSP platform internals (`@hide` APIs, framework classes, system services via Gitiles) and AndroidX/Jetpack library source and samples (via GitHub). Also useful when public docs are insufficient to complete a task.
 
 ### `kotlin-coroutines`
 Dispatcher selection, scope management, structured concurrency, cancellation, exception handling, and Android/KMP async patterns. Includes the DispatcherProvider pattern for testable dispatcher injection.
@@ -67,7 +67,7 @@ Skills are invoked automatically based on context:
 - Debugging Android issues → `android-debugging` skill activates
 - Designing or reviewing Android UI → `android-ux` skill activates
 - Working with Compose → `compose` skill activates
-- Verifying framework internals → `aosp-search` skill activates
+- Fetching Android/AndroidX source or when public docs aren't enough → `android-source-search` skill activates
 - Working with coroutines → `kotlin-coroutines` skill activates
 - Working with Flow/StateFlow/SharedFlow → `kotlin-flows` skill activates
 - Migrating from RxJava → ask Claude to migrate, `rxjava-migration` skill activates
