@@ -78,30 +78,40 @@ When referencing Compose internals, point to the exact source file:
 
 ## Source Code Receipts
 
-Beyond the guidance docs, this skill bundles the **actual source code** from
-`androidx/androidx` (branch: `androidx-main`). When you need to verify how something
-works internally, or the user asks "show me the actual implementation", read
-the raw source from `references/source-code/`:
+When you need to verify internals or the user asks "show me the actual implementation", fetch live from `androidx/androidx` — always up to date, zero context overhead.
 
-| Module | Source Reference | Key Files Inside |
-|--------|-----------------|------------------|
-| Runtime | `references/source-code/runtime-source.md` | Composer.kt, Recomposer.kt, State.kt, Effects.kt, CompositionLocal.kt, Remember.kt, SlotTable.kt, Snapshot.kt |
-| UI | `references/source-code/ui-source.md` | AndroidCompositionLocals.android.kt, Modifier.kt, Layout.kt, LayoutNode.kt, ModifierNodeElement.kt, DrawModifier.kt |
-| Foundation | `references/source-code/foundation-source.md` | LazyList.kt, LazyGrid.kt, BasicTextField.kt, Clickable.kt, Scrollable.kt, Pager.kt |
-| Material3 | `references/source-code/material3-source.md` | MaterialTheme.kt, ColorScheme.kt, Button.kt, Scaffold.kt, TextField.kt, NavigationBar.kt |
-| Navigation | `references/source-code/navigation-source.md` | NavHost.kt, ComposeNavigator.kt, NavGraphBuilder.kt, DialogNavigator.kt |
+### Preferred: `android-sources` MCP (if available)
+```
+lookup_class(className: "LazyListState")
+lookup_method(className: "Composer", methodName: "startRestartGroup")
+list_class_members(className: "Modifier")
+get_class_hierarchy(className: "LazyListState")
+search_in_source(query: "fun rememberLazyListState")
+```
 
-### Two-layer approach
-1. **Start with guidance** — read the topic-specific reference (e.g., `references/state-management.md`)
-2. **Go deeper with source** — if the user wants receipts or you need to verify, read from `references/source-code/`
+### Fallback: `android-source-search` skill
+Fetch raw files directly via `raw.githubusercontent.com`:
+```
+https://raw.githubusercontent.com/androidx/androidx/androidx-main/{path}
+```
 
 ### Source tree map
-```
-compose/
-├── runtime/runtime/src/commonMain/kotlin/androidx/compose/runtime/
-├── ui/ui/src/androidMain/kotlin/androidx/compose/ui/platform/
-├── ui/ui/src/commonMain/kotlin/androidx/compose/ui/
-├── foundation/foundation/src/commonMain/kotlin/androidx/compose/foundation/
-├── material3/material3/src/commonMain/kotlin/androidx/compose/material3/
-└── navigation/navigation-compose/src/commonMain/kotlin/androidx/navigation/compose/
-```
+
+| Module | Path prefix |
+|--------|-------------|
+| Runtime | `compose/runtime/runtime/src/commonMain/kotlin/androidx/compose/runtime/` |
+| UI (common) | `compose/ui/ui/src/commonMain/kotlin/androidx/compose/ui/` |
+| UI (Android) | `compose/ui/ui/src/androidMain/kotlin/androidx/compose/ui/platform/` |
+| Foundation | `compose/foundation/foundation/src/commonMain/kotlin/androidx/compose/foundation/` |
+| Material3 | `compose/material3/material3/src/commonMain/kotlin/androidx/compose/material3/` |
+| Navigation | `navigation/navigation-compose/src/commonMain/kotlin/androidx/navigation/compose/` |
+
+### Key files per module
+
+| Module | Key files |
+|--------|-----------|
+| Runtime | `Composer.kt`, `Recomposer.kt`, `State.kt`, `Effects.kt`, `CompositionLocal.kt`, `Remember.kt`, `Snapshot.kt` |
+| UI | `Modifier.kt`, `Layout.kt`, `LayoutNode.kt`, `ModifierNodeElement.kt`, `DrawModifier.kt` |
+| Foundation | `LazyList.kt`, `LazyGrid.kt`, `BasicTextField.kt`, `Clickable.kt`, `Scrollable.kt`, `Pager.kt` |
+| Material3 | `MaterialTheme.kt`, `ColorScheme.kt`, `Button.kt`, `Scaffold.kt`, `TextField.kt`, `NavigationBar.kt` |
+| Navigation | `NavHost.kt`, `ComposeNavigator.kt`, `NavGraphBuilder.kt` |

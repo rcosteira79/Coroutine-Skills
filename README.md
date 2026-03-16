@@ -23,7 +23,7 @@ Debugging Android and KMP issues — Logcat, ADB, ANR traces, R8 stack trace dec
 ### `compose`
 Jetpack Compose expert guidance — state management (`@Composable`, `remember`, `mutableStateOf`, `derivedStateOf`, state hoisting), Modifier chains, lazy lists, navigation, animation, side effects, theming, accessibility, and performance optimization.
 
-> Inspired by [compose-skill](https://github.com/aldefy/compose-skill) and [awesome-android-agent-skills](https://github.com/new-silvermoon/awesome-android-agent-skills). Both skills take the same approach of bundling AndroidX source code alongside guidance docs — the difference is in scope and how the guidance is structured.
+> Inspired by [compose-skill](https://github.com/aldefy/compose-skill) and [awesome-android-agent-skills](https://github.com/new-silvermoon/awesome-android-agent-skills). Unlike `compose-skill` which bundles a static AndroidX snapshot, this skill fetches source live via `android-source-explorer-mcp` (preferred) or the `android-source-search` skill — always up to date, zero context overhead.
 
 ### `android-source-search`
 Fetch and verify Android source code — AOSP platform internals (`@hide` APIs, framework classes, system services via Gitiles) and AndroidX/Jetpack library source and samples (via GitHub). Also useful when public docs are insufficient to complete a task.
