@@ -1,17 +1,13 @@
 ---
 name: compose
 description: >
-  Jetpack Compose expert skill for Android UI development. Guides state management decisions
-  (@Composable, remember, mutableStateOf, derivedStateOf, State hoisting), view composition
-  and structure, Modifier chains, lazy lists, navigation, animation, side effects, theming,
-  accessibility, and performance optimization. Always verifies against live androidx source via android-sources MCP or android-source-search skill.
-  Use this skill whenever the user mentions Compose, @Composable, remember, LaunchedEffect,
-  Scaffold, NavHost, MaterialTheme, LazyColumn, Modifier, recomposition, Style, styleable,
-  MutableStyleState, or any Jetpack Compose API. Also trigger when the user says "Android UI",
-  "Kotlin UI", "compose layout", "compose navigation", "compose animation", "material3",
-  "compose styles", "styles api", or asks about modern Android development patterns. Even
-  casual mentions like "my compose screen is slow" or "how do I pass data between screens"
-  should trigger this skill.
+  Use when the user mentions Compose, @Composable, remember, LaunchedEffect, Scaffold, NavHost,
+  MaterialTheme, LazyColumn, Modifier, recomposition, Style, styleable, MutableStyleState, or
+  any Jetpack Compose API. Use when reading or editing files that contain @Composable functions
+  or import androidx.compose.*. Use when the user says "Android UI", "Kotlin UI", "compose
+  layout", "compose navigation", "compose animation", "material3", "compose styles", or asks
+  about modern Android UI patterns. Even casual mentions like "my compose screen is slow" or
+  "how do I pass data between screens" should trigger this skill.
 ---
 
 # Jetpack Compose Expert Skill
