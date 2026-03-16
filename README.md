@@ -7,8 +7,12 @@ Claude Code skills for Android and KMP development — covering architecture, da
 ### `android-dev`
 Senior Android engineering knowledge and best practices for Android and KMP projects. Covers architecture, code quality, and platform-specific patterns.
 
+> Inspired by [awesome-android-agent-skills](https://github.com/new-silvermoon/awesome-android-agent-skills)
+
 ### `android-tdd`
 Test-driven development for Android/KMP — extends TDD with Android's three-tier test model, fake-first strategy, coroutine testing, and Compose UI testing.
+
+> Inspired by [awesome-android-agent-skills](https://github.com/new-silvermoon/awesome-android-agent-skills)
 
 ### `android-ux`
 Material Design 3 UX principles for Android — touch targets (48×48dp), 8dp spacing grid, navigation patterns (Bottom Bar, Rail, Drawer), safe area handling, accessibility, animation timing, and keyboard input types.
@@ -19,6 +23,8 @@ Debugging Android and KMP issues — Logcat, ADB, ANR traces, R8 stack trace dec
 ### `compose`
 Jetpack Compose expert guidance — state management (`@Composable`, `remember`, `mutableStateOf`, `derivedStateOf`, state hoisting), Modifier chains, lazy lists, navigation, animation, side effects, theming, accessibility, and performance optimization.
 
+> Inspired by [compose-skill](https://github.com/aldefy/compose-skill) and [awesome-android-agent-skills](https://github.com/new-silvermoon/awesome-android-agent-skills)
+
 ### `android-source-search`
 Fetch and verify Android source code — AOSP platform internals (`@hide` APIs, framework classes, system services via Gitiles) and AndroidX/Jetpack library source and samples (via GitHub). Also useful when public docs are insufficient to complete a task.
 
@@ -27,29 +33,45 @@ Fetch and verify Android source code — AOSP platform internals (`@hide` APIs, 
 ### `kotlin-coroutines`
 Dispatcher selection, scope management, structured concurrency, cancellation, exception handling, and Android/KMP async patterns. Includes the DispatcherProvider pattern for testable dispatcher injection.
 
+> Inspired by [awesome-android-agent-skills](https://github.com/new-silvermoon/awesome-android-agent-skills)
+
 ### `kotlin-flows`
 Flow type selection (`Flow`/`StateFlow`/`SharedFlow`), operator chains, callback bridging, lifecycle-safe collection, Channel migration, and UI state management.
 
 ### `rxjava-migration`
 Triggered only when you explicitly ask to migrate. Assesses complexity, maps RxJava types and operators to coroutines equivalents, and provides interop patterns for incremental migration.
 
+> Inspired by [awesome-android-agent-skills](https://github.com/new-silvermoon/awesome-android-agent-skills)
+
 ### `xml-to-compose-migration`
 Migrate Android XML layouts to Jetpack Compose — layout mapping tables (RecyclerView → LazyColumn, LinearLayout → Column/Row, etc.), attribute mapping, state migration from LiveData/ViewBinding, and incremental adoption via `ComposeView`.
+
+> Inspired by [awesome-android-agent-skills](https://github.com/new-silvermoon/awesome-android-agent-skills)
 
 ### `android-retrofit`
 Retrofit setup for Android — service interface patterns (`@GET`, `@POST`, `@Path`, `@Query`, `@Body`), coroutines integration, OkHttp configuration, Hilt module, and error handling in the repository layer.
 
+> Inspired by [awesome-android-agent-skills](https://github.com/new-silvermoon/awesome-android-agent-skills)
+
 ### `android-data-layer`
 Data layer implementation — Repository pattern as single source of truth, Room DAOs with `Flow`, offline-first strategies (stale-while-revalidate, outbox pattern), and model mapping between DTO/entity/domain types.
+
+> Inspired by [awesome-android-agent-skills](https://github.com/new-silvermoon/awesome-android-agent-skills)
 
 ### `coil-compose`
 Image loading in Compose with Coil — `AsyncImage` vs `SubcomposeAsyncImage` vs `rememberAsyncImagePainter`, `ImageRequest` configuration, performance in lazy lists, and Hilt setup for a shared `ImageLoader`.
 
+> Inspired by [awesome-android-agent-skills](https://github.com/new-silvermoon/awesome-android-agent-skills)
+
 ### `android-gradle-logic`
 Scalable Gradle build logic — Convention Plugins, composite builds, shared `compileSdk`/`minSdk`/Compose configuration across modules, and clean per-module `build.gradle.kts` files.
 
+> Inspired by [awesome-android-agent-skills](https://github.com/new-silvermoon/awesome-android-agent-skills)
+
 ### `gradle-build-performance`
 Gradle build optimisation — Build Scans, configuration cache, build cache, kapt→KSP migration, parallel execution, lazy task configuration, and a recommended `gradle.properties` baseline.
+
+> Inspired by [awesome-android-agent-skills](https://github.com/new-silvermoon/awesome-android-agent-skills)
 
 ## Installation
 
@@ -90,14 +112,6 @@ The skills are plain markdown files. Copy the content of whichever `SKILL.md` fi
 - **Other editors** — paste into your project's custom instructions or context file
 
 Each skill is self-contained and can be used independently.
-
-## Inspiration
-
-These skills drew inspiration from:
-
-- [awesome-android-agent-skills](https://github.com/new-silvermoon/awesome-android-agent-skills)
-- [compose-skill](https://github.com/aldefy/compose-skill)
-- [ui-ux-pro-max-skill](https://github.com/nextlevelbuilder/ui-ux-pro-max-skill)
 
 ## License
 
