@@ -4,7 +4,7 @@ description: >
   Jetpack Compose expert skill for Android UI development. Guides state management decisions
   (@Composable, remember, mutableStateOf, derivedStateOf, State hoisting), view composition
   and structure, Modifier chains, lazy lists, navigation, animation, side effects, theming,
-  accessibility, and performance optimization. Backed by actual androidx source code analysis.
+  accessibility, and performance optimization. Always verifies against live androidx source via android-sources MCP or android-source-search skill.
   Use this skill whenever the user mentions Compose, @Composable, remember, LaunchedEffect,
   Scaffold, NavHost, MaterialTheme, LazyColumn, Modifier, recomposition, Style, styleable,
   MutableStyleState, or any Jetpack Compose API. Also trigger when the user says "Android UI",
@@ -29,7 +29,7 @@ When helping with Compose code, follow this checklist:
 - Is this a state problem, layout problem, performance problem, or architecture question?
 
 ### 2. Consult the right reference
-Read the relevant reference file(s) from `references/` before answering:
+Read the relevant guidance file(s) from `references/` for patterns and principles:
 
 | Topic | Reference File |
 |-------|---------------|
@@ -48,13 +48,23 @@ Read the relevant reference file(s) from `references/` before answering:
 | `AndroidView` interop, `LiveData` migration, feature modularization | `references/interop-modularization.md` |
 | **Styles API** (experimental): `Style {}`, `MutableStyleState`, `Modifier.styleable()` | `references/styles-experimental.md` |
 
-### 3. Apply and verify
-- Write code that follows the patterns in the reference
+### 3. Verify against live source
+For any non-trivial answer, verify against actual androidx source — **always use live source, never rely on training data alone**.
+
+Preferred: `android-sources` MCP
+```
+lookup_class(className: "LazyListState")
+lookup_method(className: "Composer", methodName: "startRestartGroup")
+search_in_source(query: "fun rememberLazyListState")
+```
+
+Fallback: `android-source-search` skill → `raw.githubusercontent.com/androidx/androidx/androidx-main/{path}`
+
+### 4. Apply and cite
+- Write code that follows the patterns in the reference and matches live source
 - Flag any anti-patterns you see in the user's existing code
 - Suggest the minimal correct solution — don't over-engineer
-
-### 4. Cite the source
-When referencing Compose internals, point to the exact source file:
+- Cite the source file when referencing internals:
 ```
 // See: compose/runtime/runtime/src/commonMain/kotlin/androidx/compose/runtime/Composer.kt
 ```
