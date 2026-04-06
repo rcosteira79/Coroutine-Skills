@@ -1,20 +1,28 @@
 ---
-name: compose
+name: compose-expert
 description: >
-  Use when the user mentions Compose, @Composable, remember, LaunchedEffect, Scaffold, NavHost,
-  MaterialTheme, LazyColumn, Modifier, recomposition, Style, styleable, MutableStyleState, or
-  any Jetpack Compose API. Use when reading or editing files that contain @Composable functions
-  or import androidx.compose.*. Use when the user says "Android UI", "Kotlin UI", "compose
-  layout", "compose navigation", "compose animation", "material3", "compose styles", or asks
-  about modern Android UI patterns. Even casual mentions like "my compose screen is slow" or
-  "how do I pass data between screens" should trigger this skill.
+  Compose and Compose Multiplatform expert skill for UI development across Android, Desktop,
+  iOS, and Web. Guides state management, view composition, animations, navigation, performance,
+  design-to-code workflows, and production crash patterns. Backed by actual source code analysis
+  from both androidx/androidx and JetBrains/compose-multiplatform-core.
+  Use this skill whenever the user mentions Compose, @Composable, remember, LaunchedEffect,
+  Scaffold, NavHost, MaterialTheme, LazyColumn, Modifier, recomposition, Style, styleable,
+  MutableStyleState, Compose Multiplatform, CMP, KMP, commonMain, expect, actual,
+  ComposeUIViewController, Window composable, UIKitView, ComposeViewport, Res.drawable,
+  Res.string, or any Compose API. Also trigger when the user says "Android UI", "Kotlin UI",
+  "compose layout", "compose navigation", "compose animation", "material3", "compose styles",
+  "compose multiplatform", "desktop compose", "iOS compose", "compose web", "design to compose",
+  "build this UI", "implement this design", or asks about modern Kotlin UI development patterns.
+  Even casual mentions like "my compose screen is slow" or "how do I pass data between screens"
+  should trigger this skill.
 ---
 
-# Jetpack Compose Expert Skill
+# Compose Expert Skill
 
-Non-opinionated, practical guidance for writing correct, performant Jetpack Compose code.
-Focuses on real pitfalls developers encounter daily, backed by analysis of the actual
-`androidx/androidx` source code (branch: `androidx-main`).
+Non-opinionated, practical guidance for writing correct, performant Compose code —
+across Android, Desktop, iOS, and Web. Covers Jetpack Compose and Compose Multiplatform.
+Backed by analysis of actual source code from `androidx/androidx` and
+`JetBrains/compose-multiplatform-core`.
 
 ## Workflow
 
@@ -23,9 +31,16 @@ When helping with Compose code, follow this checklist:
 ### 1. Understand the request
 - What Compose layer is involved? (Runtime, UI, Foundation, Material3, Navigation)
 - Is this a state problem, layout problem, performance problem, or architecture question?
+- Is this Android-only or Compose Multiplatform (CMP)?
 
-### 2. Consult the right reference
-Read the relevant guidance file(s) from `references/` for patterns and principles:
+### 2. Analyze the design (if visual reference provided)
+- If the user shares a Figma frame, screenshot, or design spec, consult `references/design-to-compose.md`
+- Decompose the design into a composable tree using the 5-step methodology
+- Map design tokens to MaterialTheme, spacing to CompositionLocals
+- Identify animation needs and consult `references/animation.md` for recipes
+
+### 3. Consult the right reference
+Read the relevant reference file(s) from `references/` before answering:
 
 | Topic | Reference File |
 |-------|---------------|
@@ -41,26 +56,19 @@ Read the relevant guidance file(s) from `references/` for patterns and principle
 | Recomposition skipping, stability, baseline profiles, benchmarking | `references/performance.md` |
 | Semantics, content descriptions, traversal order, testing | `references/accessibility.md` |
 | Removed/replaced APIs, migration paths from older Compose versions | `references/deprecated-patterns.md` |
-| `AndroidView` interop, `LiveData` migration, feature modularization | `references/interop-modularization.md` |
 | **Styles API** (experimental): `Style {}`, `MutableStyleState`, `Modifier.styleable()` | `references/styles-experimental.md` |
+| Figma/screenshot decomposition, design tokens, spacing, modifier ordering | `references/design-to-compose.md` |
+| Production crash patterns, defensive coding, state/performance rules | `references/production-crash-playbook.md` |
+| Compose Multiplatform, `expect`/`actual`, resources (`Res.*`), migration | `references/multiplatform.md` |
+| Desktop (Window, Tray, MenuBar), iOS (UIKitView), Web (ComposeViewport) | `references/platform-specifics.md` |
 
-### 3. Verify against live source
-For any non-trivial answer, verify against actual androidx source — **always use live source, never rely on training data alone**.
-
-Preferred: `android-sources` MCP
-```
-lookup_class(className: "LazyListState")
-lookup_method(className: "Composer", methodName: "startRestartGroup")
-search_in_source(query: "fun rememberLazyListState")
-```
-
-Fallback: `android-source-search` skill → `raw.githubusercontent.com/androidx/androidx/androidx-main/{path}`
-
-### 4. Apply and cite
-- Write code that follows the patterns in the reference and matches live source
+### 4. Apply and verify
+- Write code that follows the patterns in the reference
 - Flag any anti-patterns you see in the user's existing code
 - Suggest the minimal correct solution — don't over-engineer
-- Cite the source file when referencing internals:
+
+### 5. Cite the source
+When referencing Compose internals, point to the exact source file:
 ```
 // See: compose/runtime/runtime/src/commonMain/kotlin/androidx/compose/runtime/Composer.kt
 ```
@@ -82,42 +90,57 @@ Fallback: `android-source-search` skill → `raw.githubusercontent.com/androidx/
 5. **Side effects exist to bridge Compose's declarative world with imperative APIs**. Use the
    right one for the job — misusing them causes bugs that are hard to trace.
 
-## Source Code Receipts
+6. **Compose Multiplatform shares the runtime but not the platform**. UI code in
+   `commonMain` is portable. Platform-specific APIs (`LocalContext`, `BackHandler`,
+   `Window`) require `expect`/`actual` or conditional source sets.
 
-When you need to verify internals or the user asks "show me the actual implementation", fetch live from `androidx/androidx` — always up to date, zero context overhead.
+## Source Code Verification
 
-### Preferred: `android-sources` MCP (if available)
+Always verify against **live source code** — never rely on training data alone.
+
+### Tier 1 (Preferred): `android-sources` MCP server
+
+When available, use the MCP tools for fast, precise lookups:
+
 ```
 lookup_class(className: "LazyListState")
 lookup_method(className: "Composer", methodName: "startRestartGroup")
+search_in_source(query: "fun rememberLazyListState")
 list_class_members(className: "Modifier")
 get_class_hierarchy(className: "LazyListState")
-search_in_source(query: "fun rememberLazyListState")
+find_references(className: "SnapshotState", methodName: "value")
 ```
 
-### Fallback: `android-source-search` skill
-Fetch raw files directly via `raw.githubusercontent.com`:
-```
-https://raw.githubusercontent.com/androidx/androidx/androidx-main/{path}
-```
+### Tier 2 (Fallback): Raw GitHub URLs
+
+If the MCP server is unavailable, fetch source directly:
+
+- **AndroidX**: `https://raw.githubusercontent.com/androidx/androidx/androidx-main/{path}`
+- **Directory listing**: `gh api repos/androidx/androidx/contents/{path}`
+- **CMP**: `https://raw.githubusercontent.com/JetBrains/compose-multiplatform-core/jb-main/{path}`
+- **AOSP platform**: `https://android.googlesource.com/platform/frameworks/base/+/refs/heads/main/{path}?format=TEXT` (base64)
+
+### Two-layer approach
+1. **Start with guidance** — read the topic-specific reference (e.g., `references/state-management.md`)
+2. **Verify against live source** — use MCP tools or raw GitHub to confirm behavior
 
 ### Source tree map
+```
+androidx/androidx (branch: androidx-main)
+├── compose/runtime/runtime/src/commonMain/kotlin/androidx/compose/runtime/
+├── compose/ui/ui/src/androidMain/kotlin/androidx/compose/ui/platform/
+├── compose/ui/ui/src/commonMain/kotlin/androidx/compose/ui/
+├── compose/foundation/foundation/src/commonMain/kotlin/androidx/compose/foundation/
+├── compose/material3/material3/src/commonMain/kotlin/androidx/compose/material3/
+└── compose/navigation/navigation-compose/src/commonMain/kotlin/androidx/navigation/compose/
 
-| Module | Path prefix |
-|--------|-------------|
-| Runtime | `compose/runtime/runtime/src/commonMain/kotlin/androidx/compose/runtime/` |
-| UI (common) | `compose/ui/ui/src/commonMain/kotlin/androidx/compose/ui/` |
-| UI (Android) | `compose/ui/ui/src/androidMain/kotlin/androidx/compose/ui/platform/` |
-| Foundation | `compose/foundation/foundation/src/commonMain/kotlin/androidx/compose/foundation/` |
-| Material3 | `compose/material3/material3/src/commonMain/kotlin/androidx/compose/material3/` |
-| Navigation | `navigation/navigation-compose/src/commonMain/kotlin/androidx/navigation/compose/` |
+compose-multiplatform-core (branch: jb-main)
+├── compose/ui/ui/src/desktopMain/kotlin/androidx/compose/ui/window/
+├── compose/ui/ui/src/iosMain/kotlin/androidx/compose/ui/window/
+├── compose/ui/ui/src/webMain/kotlin/androidx/compose/ui/window/
+├── compose/ui/ui/src/skikoMain/kotlin/androidx/compose/ui/
+└── compose/foundation/foundation/src/skikoMain/kotlin/androidx/compose/foundation/
 
-### Key files per module
-
-| Module | Key files |
-|--------|-----------|
-| Runtime | `Composer.kt`, `Recomposer.kt`, `State.kt`, `Effects.kt`, `CompositionLocal.kt`, `Remember.kt`, `Snapshot.kt` |
-| UI | `Modifier.kt`, `Layout.kt`, `LayoutNode.kt`, `ModifierNodeElement.kt`, `DrawModifier.kt` |
-| Foundation | `LazyList.kt`, `LazyGrid.kt`, `BasicTextField.kt`, `Clickable.kt`, `Scrollable.kt`, `Pager.kt` |
-| Material3 | `MaterialTheme.kt`, `ColorScheme.kt`, `Button.kt`, `Scaffold.kt`, `TextField.kt`, `NavigationBar.kt` |
-| Navigation | `NavHost.kt`, `ComposeNavigator.kt`, `NavGraphBuilder.kt` |
+compose-multiplatform (resources library)
+└── components/resources/library/src/commonMain/
+```

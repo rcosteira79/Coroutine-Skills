@@ -24,16 +24,31 @@ Every frame consists of three phases. Understanding state reads in each phase pr
 
 ## Recomposition Skipping with Compiler Reports
 
-The Compose compiler generates `$changed` bitmasks to detect state changes. Check compiler reports:
+The Compose compiler generates `$changed` bitmasks to detect state changes. Enable compiler reports to inspect stability and skippability:
 
-```bash
-# In build.gradle.kts
-composeOptions {
-    kotlinCompilerExtensionVersion = "1.5.0"
+```kotlin
+// build.gradle.kts
+composeCompiler {
+    reportsDestination = layout.buildDirectory.dir("compose_reports")
+    metricsDestination = layout.buildDirectory.dir("compose_metrics")
 }
-
-// Compiler report shows skipped/non-skipped functions
 ```
+
+After building (`./gradlew assembleRelease`), check the generated files in `build/compose_reports/`:
+
+- **`*_composables.txt`** — shows each composable's restartability and skippability:
+  ```
+  restartable skippable fun MyComponent(name: String, onClick: Function0<Unit>)
+  restartable fun UnstableComponent(items: List<Item>)  // NOT skippable — unstable param
+  ```
+
+- **`*_classes.txt`** — shows stability inference for each class:
+  ```
+  stable class User { stable val name: String }
+  unstable class ScreenState { unstable val items: List<Item> }
+  ```
+
+A composable missing `skippable` means the compiler cannot skip it during recomposition, even when inputs haven't changed. Fix by stabilizing its parameters (see Stability section below).
 
 ### Stability — @Stable and @Immutable
 
@@ -411,76 +426,6 @@ Button(colors = buttonColors) { }
 
 ---
 
-## Profiling Workflow
-
-When diagnosing Compose performance issues:
-
-1. **Start with code review** — look for the common code smells below before reaching for profiling tools
-2. **Profile if inconclusive** — use Layout Inspector in Android Studio to see recomposition counts; use Perfetto / System Trace for frame timing
-3. **Always profile release builds** — debug builds have significant overhead from Compose instrumentation; results from debug are not representative
-4. **Measure with Macrobenchmark** — for startup and scroll metrics, use Macrobenchmark to get reproducible numbers before and after
-
-```bash
-# Enable recomposition highlights in Android Studio:
-# Layout Inspector → Show Recomposition Counts
-```
-
-## Code Smells and Fixes
-
-### Unstable lambda captures
-
-```kotlin
-// Bad: new lambda instance every recomposition
-Button(onClick = { viewModel.doSomething(item) }) { ... }
-
-// Good: remember with key or method reference
-val onClick = remember(item) { { viewModel.doSomething(item) } }
-Button(onClick = onClick) { ... }
-```
-
-### Expensive computation without remember
-
-```kotlin
-// Bad: sorting runs on every recomposition
-@Composable
-fun ItemList(items: List<Item>) {
-    val sorted = items.sortedBy { it.name }
-    LazyColumn { items(sorted) { ... } }
-}
-
-// Good: cached until items changes
-@Composable
-fun ItemList(items: List<Item>) {
-    val sorted = remember(items) { items.sortedBy { it.name } }
-    LazyColumn { items(sorted) { ... } }
-}
-```
-
-### Missing keys in LazyColumn
-
-```kotlin
-// Bad: index-based identity causes recomposition on list changes
-LazyColumn {
-    items(items) { item -> ItemRow(item) }
-}
-
-// Good: stable key-based identity
-LazyColumn {
-    items(items, key = { it.id }) { item -> ItemRow(item) }
-}
-```
-
-### Unstable data class with collection
-
-```kotlin
-// Bad: List is not stable — Compose cannot skip this type
-data class UiState(val items: List<Item>, val isLoading: Boolean)
-
-// Good: ImmutableList from kotlinx.collections.immutable
-@Immutable
-data class UiState(val items: ImmutableList<Item>, val isLoading: Boolean)
-```
-
 ## Anti-Patterns
 
 ### Wrapping Everything in remember
@@ -514,3 +459,165 @@ data class User(val name: String, val age: Int)
 - **Compose Compiler Reports**: https://developer.android.com/develop/ui/compose/performance/stability-report
 - **Macrobenchmark**: https://developer.android.com/develop/ui/compose/performance/measurement
 - **Baseline Profiles**: https://developer.android.com/develop/ui/compose/performance/baseline-profiles
+
+---
+
+## Zero-Size DrawScope Guard
+
+During initial composition, a composable's size can be zero. This causes crashes in calculations like `size.minDimension / 2`.
+
+```kotlin
+// BAD: crashes when size is zero
+Canvas(modifier = Modifier.fillMaxSize()) {
+    val radius = size.minDimension / 2  // NaN or divide-by-zero
+    drawCircle(color = Color.Blue, radius = radius)
+}
+
+// GOOD: always guard
+Canvas(modifier = Modifier.fillMaxSize()) {
+    if (size.minDimension <= 0f) return@Canvas
+    val radius = size.minDimension / 2
+    drawCircle(color = Color.Blue, radius = radius)
+}
+```
+
+Rule: Never use `fillMaxSize()` on Canvas without an explicit height constraint. Always guard DrawScope operations.
+
+---
+
+## Composition Tracing
+
+Use `trace()` for Perfetto/systrace integration:
+
+```kotlin
+@Composable
+fun ExpensiveScreen() {
+    trace("ExpensiveScreen") {
+        // composable body — visible in system traces
+    }
+}
+```
+
+Enables identifying slow composables in production profiling without adding logging.
+
+---
+
+## movableContentOf
+
+Avoid recomposition when moving content between layout positions:
+
+```kotlin
+val movableContent = remember {
+    movableContentOf {
+        ExpensiveChild() // Only composed once, moved without recomposition
+    }
+}
+
+if (isExpanded) {
+    ExpandedLayout { movableContent() }
+} else {
+    CollapsedLayout { movableContent() }
+}
+```
+
+Without `movableContentOf`, switching between layouts would dispose and recompose `ExpensiveChild`. With it, the content is moved, preserving state and avoiding recomposition.
+
+---
+
+## Compiler Reports (Expanded)
+
+Enable compiler reports to see which composables are skippable and which types are stable:
+
+```kotlin
+// build.gradle.kts
+composeCompiler {
+    reportsDestination = layout.buildDirectory.dir("compose_reports")
+    metricsDestination = layout.buildDirectory.dir("compose_metrics")
+}
+```
+
+After building, check the output files:
+
+- `*_composables.txt` — shows each composable's status:
+  ```
+  restartable skippable fun MyComponent(name: String, onClick: Function0<Unit>)
+  restartable fun UnstableComponent(items: List<Item>)  // NOT skippable!
+  ```
+
+- `*_classes.txt` — shows type stability:
+  ```
+  stable class User { stable val name: String }
+  unstable class ScreenState { unstable val items: List<Item> }
+  ```
+
+Fix unstable types by:
+1. Using `@Stable` annotation on the class
+2. Using `kotlinx.collections.immutable.ImmutableList` instead of `List`
+3. Adding the class to `compose-stability-config.txt` for multi-module projects
+
+---
+
+## Production Performance Rules
+
+1. **R8: strip previews + semantics in release** — add to `proguard-rules.pro`:
+```
+-assumenosideeffects class androidx.compose.ui.tooling.preview.** { *; }
+```
+
+2. **`@Suppress("ComposeUnstableCollections")`** — pragmatic skipping when stability isn't worth the complexity:
+```kotlin
+@Suppress("ComposeUnstableCollections")
+@Composable
+fun ItemList(items: List<Item>) { // List is unstable but acceptable here
+    // ...
+}
+```
+
+3. **ImmutableList for stability** — Guava `ImmutableList` or `kotlinx.collections.immutable`:
+```kotlin
+// Makes the parameter stable, enabling recomposition skipping
+@Composable
+fun StableList(items: ImmutableList<Item>) { ... }
+```
+
+4. **ReportDrawnWhen** for startup performance:
+```kotlin
+ReportDrawnWhen { items.isNotEmpty() }
+```
+
+5. **Canvas always explicitly sized** — never `fillMaxSize()` without a height constraint:
+```kotlin
+// BAD
+Canvas(Modifier.fillMaxSize()) { ... }
+
+// GOOD
+Canvas(Modifier.fillMaxWidth().height(200.dp)) { ... }
+```
+
+---
+
+## Compose Multiplatform Performance
+
+Performance tooling differs across platforms:
+
+| Tool | Android | Desktop | iOS | Web |
+|------|---------|---------|-----|-----|
+| Baseline Profiles | Yes | No | No | No |
+| Macrobenchmark | Yes | No | No | No |
+| Layout Inspector | Yes (AS) | No | No | No |
+| Profiling | Android Studio | JMH | Instruments | Browser DevTools |
+| R8/ProGuard | Yes | ProGuard separately | N/A (Kotlin/Native) | N/A |
+
+iOS-specific:
+- Kotlin/Native has different GC behavior than Android ART
+- Enable ProMotion with `CADisableMinimumFrameDurationOnPhone = true` in Info.plist
+- Use configurable frame rate API: increase for animations, decrease for static content
+
+Desktop JVM:
+- Different GC characteristics (G1GC vs ART)
+- JIT compilation warms up differently
+
+Web/WASM:
+- Renders entire canvas per frame (unlike DOM partial repaints)
+- WASM GC behavior differs from JVM
+- Bundle size impacts initial load time

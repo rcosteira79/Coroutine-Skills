@@ -359,9 +359,9 @@ fun Parent(title: String) {
 fun Child(title: String) { ... }
 ```
 
-**Types:**
-- `staticCompositionLocalOf`: Value rarely changes, default is a constant
-- `compositionLocalOf`: Value changes frequently, default is computed
+**Types (recomposition scope is the key difference):**
+- `staticCompositionLocalOf`: When the value changes, the **entire subtree** below the `CompositionLocalProvider` is invalidated and recomposed. Use for values that truly never change during composition (theme, spacing, DI-provided dependencies).
+- `compositionLocalOf`: When the value changes, only composables that **actually read** `.current` are invalidated. Use for values that may change during composition (user session, locale, scroll state).
 
 ## Composable Return Values
 
@@ -592,73 +592,177 @@ fun ParentScreen(viewModel: ParentViewModel) {
 
 ---
 
-## Previews
-
-Create a private preview function for every public composable.
-
-```kotlin
-@Composable
-fun LoginButton(
-    isEnabled: Boolean,
-    onLogin: () -> Unit,
-    modifier: Modifier = Modifier
-) {
-    Button(
-        onClick = onLogin,
-        enabled = isEnabled,
-        modifier = modifier
-    ) {
-        Text("Log in")
-    }
-}
-
-@Preview(showBackground = true)
-@Preview(showBackground = true, uiMode = Configuration.UI_MODE_NIGHT_YES)
-@Composable
-private fun LoginButtonPreview() {
-    AppTheme {
-        LoginButton(isEnabled = true, onLogin = {})
-    }
-}
-```
-
-Rules:
-- Mark preview functions `private` — they are build artifacts, not API
-- Always wrap in your app theme so colors and typography match production
-- Include both Light and Dark mode previews for UI components
-- Pass static dummy data to stateless composables — never call `viewModel()` in a preview
-- Use `@PreviewParameter` for composables with many state variants
-
----
-
-## Custom Layout — Constraint Audit
-
-When writing a custom `Layout` composable, audit **every** `.measure(constraints.copy(...))` call — not just the placement calls.
-
-**Rule:** Decorative children (dividers, backgrounds, overlays) must have both `minWidth = 0` and `minHeight = 0` zeroed out, or they silently inherit the parent's minimum size and render incorrectly.
-
-```kotlin
-// ❌ Divider inherits minHeight from parent — renders as tall as the toolbar, not 1dp
-val dividerPlaceable = measurables
-    .first { it.layoutId == "divider" }
-    .measure(constraints.copy(minWidth = 0))  // minHeight not zeroed!
-
-// ✅ Correct — decorative child has all minimums cleared
-val dividerPlaceable = measurables
-    .first { it.layoutId == "divider" }
-    .measure(constraints.copy(minWidth = 0, minHeight = 0))
-```
-
-This bug is especially silent: the oversized decorative child is often hidden behind structural siblings, so it causes no visible crash — just wrong layout or invisible elements.
-
-**Checklist for each measurable in a custom Layout:**
-
-| Child role | minWidth | minHeight | maxWidth | maxHeight |
-|---|---|---|---|---|
-| Structural (content, title) | depends | depends | constrain | depends |
-| Decorative (divider, background, overlay) | `0` | `0` | usually `maxWidth` | usually layout height |
-| Navigation icon / action | `0` | inherited OK | full constraints | full constraints |
-
----
-
 **Source references:** `androidx.compose.material3`, `androidx.compose.ui.tooling.preview`, `androidx.compose.runtime.CompositionLocal`
+
+## Design-to-Composable Decomposition
+
+A systematic 5-step process for translating a visual design (Figma frame, screenshot, or spec) into a composable tree:
+
+**Step 1: Identify the root layout structure**
+- Full-screen Scaffold? (TopAppBar + content + bottom bar + FAB)
+- Scrollable content? (LazyColumn vs Column with verticalScroll)
+- Tabbed layout? (TabRow + HorizontalPager)
+- Dialog or bottom sheet?
+
+**Step 2: Decompose into visual sections (top-down)**
+- Identify major horizontal sections (header, content area, footer)
+- Within each section, identify horizontal groupings (icon + text rows, card grids)
+- This mirrors the DCGen divide-and-conquer approach: split horizontally first, then vertically
+
+**Step 3: For each section, identify the layout type**
+- Items stacked vertically with equal spacing -> `Column` with `Arrangement.spacedBy()`
+- Items side by side -> `Row` with weights or fixed sizes
+- Items overlapping -> `Box` with alignment modifiers
+- Grid of cards -> `LazyGrid` or `FlowRow`
+- Scrollable list of items -> `LazyColumn`
+
+**Step 4: Extract visual properties and map to theme**
+- Background colors -> `MaterialTheme.colorScheme.*`
+- Typography -> `MaterialTheme.typography.*` (headlineLarge, bodyMedium, etc.)
+- Spacing -> 4dp/8dp grid increments, use `Arrangement.spacedBy()` and `Modifier.padding()`
+- Corner radius -> `MaterialTheme.shapes.*`
+- Elevation -> `Card` or `Surface` with `tonalElevation`
+
+**Step 5: Identify interactive elements**
+- Buttons, text fields, toggles, checkboxes -> map to Material 3 components
+- Custom clickable areas -> `Modifier.clickable` with `role = Role.Button`
+- Add `contentDescription` for accessibility
+- Ensure 48dp minimum touch targets
+
+## Screen Structure Patterns
+
+The standard screen pattern separates ViewModel integration from UI:
+
+```kotlin
+@Composable
+fun ConversationScreen(
+    viewModel: ConversationViewModel = hiltViewModel(),
+    onNavigateToDetail: (String) -> Unit
+) {
+    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+
+    ConversationContent(
+        uiState = uiState,
+        onAction = viewModel::onAction,
+        onNavigateToDetail = onNavigateToDetail
+    )
+}
+
+@Composable
+private fun ConversationContent(
+    uiState: ConversationUiState,
+    onAction: (ConversationAction) -> Unit,
+    onNavigateToDetail: (String) -> Unit
+) {
+    Scaffold(
+        topBar = {
+            TopAppBar(title = { Text("Conversations") })
+        },
+        floatingActionButton = {
+            FloatingActionButton(onClick = { onAction(ConversationAction.Create) }) {
+                Icon(Icons.Default.Add, contentDescription = "New conversation")
+            }
+        }
+    ) { innerPadding ->
+        // MUST use innerPadding -- ignoring it causes content overlap
+        when (val state = uiState) {
+            is ConversationUiState.Loading -> {
+                Box(Modifier.fillMaxSize().padding(innerPadding), contentAlignment = Alignment.Center) {
+                    CircularProgressIndicator()
+                }
+            }
+            is ConversationUiState.Success -> {
+                LazyColumn(modifier = Modifier.padding(innerPadding)) {
+                    items(state.conversations, key = { it.id }) { conversation ->
+                        ConversationRow(
+                            conversation = conversation,
+                            onClick = { onNavigateToDetail(conversation.id) }
+                        )
+                    }
+                }
+            }
+            is ConversationUiState.Error -> {
+                ErrorContent(state.message, modifier = Modifier.padding(innerPadding))
+            }
+        }
+    }
+}
+```
+
+Key pattern: ViewModel at screen level, pure content composable underneath. The content composable receives state + callbacks, never the ViewModel. This makes it previewable and testable.
+
+## Composite Preview Annotations
+
+Define once, use everywhere:
+
+```kotlin
+@Preview(name = "Light", uiMode = Configuration.UI_MODE_NIGHT_NO)
+@Preview(name = "Dark", uiMode = Configuration.UI_MODE_NIGHT_YES)
+@Preview(name = "Large Font", fontScale = 1.5f)
+@Preview(name = "Small Device", device = "spec:width=320dp,height=640dp,dpi=320")
+@Preview(name = "Tablet", device = Devices.TABLET)
+@Preview(name = "Foldable", device = Devices.FOLDABLE)
+@Preview(name = "RTL", locale = "ar")
+annotation class ComponentPreviews
+```
+
+Apply to every extracted composable:
+```kotlin
+@ComponentPreviews
+@Composable
+private fun ConversationRowPreview() {
+    AppTheme {
+        ConversationRow(
+            conversation = previewConversation(),
+            onClick = {}
+        )
+    }
+}
+```
+
+For data-driven previews, use `PreviewParameterProvider`:
+```kotlin
+class ConversationPreviewProvider : PreviewParameterProvider<Conversation> {
+    override val values = sequenceOf(
+        Conversation(id = "1", title = "Short title", unreadCount = 0),
+        Conversation(id = "2", title = "Very long conversation title that might wrap", unreadCount = 99),
+        Conversation(id = "3", title = "", unreadCount = 0), // Empty title edge case
+    )
+}
+
+@ComponentPreviews
+@Composable
+private fun ConversationRowPreview(
+    @PreviewParameter(ConversationPreviewProvider::class) conversation: Conversation
+) {
+    AppTheme { ConversationRow(conversation = conversation, onClick = {}) }
+}
+```
+
+**CMP note:** In `commonMain`, use `@Preview` from `org.jetbrains.compose.ui.tooling.preview`. Device-specific previews (`Devices.TABLET`) are Android-only.
+
+## Adaptive Layouts
+
+Use `WindowSizeClass` to adapt layouts for different screen sizes:
+
+```kotlin
+@Composable
+fun AdaptiveScreen(windowSizeClass: WindowSizeClass) {
+    when (windowSizeClass.widthSizeClass) {
+        WindowWidthSizeClass.Compact -> {
+            // Phone: single column
+            SinglePaneLayout()
+        }
+        WindowWidthSizeClass.Medium -> {
+            // Small tablet: two panes
+            TwoPaneLayout()
+        }
+        WindowWidthSizeClass.Expanded -> {
+            // Large tablet/desktop: list-detail
+            ListDetailLayout()
+        }
+    }
+}
+```
+
+For navigation, use `NavigationSuiteScaffold` which automatically switches between bottom nav (compact), rail (medium), and drawer (expanded).
