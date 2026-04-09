@@ -1,14 +1,14 @@
-# Android Skills for Claude Code
+# Android Skills
 
-Claude Code skills for Android and KMP development — covering architecture, data layer, networking, testing, debugging, Jetpack Compose, coroutines, flows, Gradle, and RxJava migration.
+Skills for Android and KMP development — covering architecture, data layer, networking, testing, debugging, Jetpack Compose, coroutines, flows, Gradle, and RxJava migration. Works as a plugin for Claude Code and Copilot CLI.
 
-Several skills in this collection were inspired by or built on top of work from the community — specifically [awesome-android-agent-skills](https://github.com/new-silvermoon/awesome-android-agent-skills) and [compose-skill](https://github.com/aldefy/compose-skill). Each skill below is marked as either **original** or notes what it was inspired by / forked from.
+Several skills in this collection were inspired by or built on top of work from the community — specifically [awesome-android-agent-skills](https://github.com/new-silvermoon/awesome-android-agent-skills) and [compose-skill](https://github.com/aldefy/compose-skill). Skills with no attribution tag are original work.
 
 ## Installation
 
 ### Claude Code (plugin)
 
-Install as a plugin to get all 15 skills and the [android-source-explorer-mcp](https://github.com/mrmike/android-source-explorer-mcp) server in one go:
+Install as a plugin to get all skills and the [android-source-explorer-mcp](https://github.com/mrmike/android-source-explorer-mcp) server in one go:
 
 ```
 /plugin marketplace add rcosteira79/android-skills
@@ -40,25 +40,9 @@ copilot plugin install rcosteira79/android-skills
 
 Each skill is self-contained — the `SKILL.md` files are plain markdown, so they can be adapted to other editors that support custom instructions.
 
-Skills are invoked automatically based on context:
-
-- Working on Android or KMP code → `android-dev` skill activates
-- Writing or fixing tests → `android-tdd` skill activates
-- Debugging Android issues → `android-debugging` skill activates
-- Designing or reviewing Android UI → `android-ux` skill activates
-- Working with Compose → `compose` skill activates
-- Fetching Android/AndroidX source or when public docs aren't enough → `android-source-search` skill activates
-- Working with coroutines → `kotlin-coroutines` skill activates
-- Working with Flow/StateFlow/SharedFlow → `kotlin-flows` skill activates
-- Migrating from RxJava → ask Claude to migrate, `rxjava-migration` skill activates
-- Migrating XML layouts to Compose → `xml-to-compose-migration` skill activates
-- Setting up networking with Retrofit → `android-retrofit` skill activates
-- Implementing the data/repository layer → `android-data-layer` skill activates
-- Loading images with Coil → `coil-compose` skill activates
-- Setting up Gradle build logic → `android-gradle-logic` skill activates
-- Optimising build performance → `gradle-build-performance` skill activates
-
 ## Skills
+
+Skills are invoked automatically based on context (e.g. working on Compose code activates the `compose` skill).
 
 ### `android-dev`
 Senior Android engineering knowledge and best practices for Android and KMP projects. Covers architecture, code quality, and platform-specific patterns.
