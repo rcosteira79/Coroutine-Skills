@@ -1,8 +1,8 @@
 {
   "mcpServers": {
     "android-sources": {
-      "command": "uvx",
-      "args": ["android-source-explorer", "serve"]
+      "command": "android-source-explorer",
+      "args": ["serve"]
     }
   }
 }
