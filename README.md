@@ -22,8 +22,7 @@ Updates are picked up automatically when the plugin version is bumped.
 The plugin includes a config for [android-source-explorer-mcp](https://github.com/mrmike/android-source-explorer-mcp), but the server binary must be installed separately:
 
 ```bash
-brew tap mrmike/android-source-explorer-mcp
-brew install android-source-explorer
+uv tool install git+https://github.com/mrmike/android-source-explorer-mcp
 ```
 
 Without it, the `android-source-search` skill still works as a fallback (fetches source via Gitiles/GitHub).
