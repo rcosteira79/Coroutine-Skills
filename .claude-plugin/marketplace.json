@@ -12,7 +12,7 @@
   "plugins": [
     {
       "name": "android-skills",
-      "source": ".",
+      "source": "./",
       "description": "Android and KMP development skills for Claude Code — architecture, Compose, coroutines, flows, testing, debugging, Gradle, and Material Design 3",
       "version": "2.0.0",
       "author": {
