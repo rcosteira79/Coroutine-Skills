@@ -73,14 +73,26 @@ Gradle build optimisation — Build Scans, configuration cache, build cache, kap
 
 ## Installation
 
-### Claude Code
+### Claude Code (plugin)
 
-Copy the skill directories into your Claude Code skills folder:
+Install as a plugin to get all 15 skills and the [android-source-explorer-mcp](https://github.com/mrmike/android-source-explorer-mcp) server in one go:
+
+```bash
+claude plugin add rcosteira79/android-skills
+```
+
+Updates are picked up automatically when the plugin version is bumped.
+
+### Claude Code (manual)
+
+Alternatively, copy the skill directories into your Claude Code skills folder:
 
 ```bash
 git clone https://github.com/rcosteira79/android-skills.git
 cp -r android-skills/skills/* ~/.claude/skills/
 ```
+
+Note: the manual approach does not install the MCP server. See [android-source-explorer-mcp](https://github.com/mrmike/android-source-explorer-mcp) for separate setup instructions.
 
 Skills are invoked automatically based on context:
 
