@@ -77,8 +77,9 @@ Gradle build optimisation — Build Scans, configuration cache, build cache, kap
 
 Install as a plugin to get all 15 skills and the [android-source-explorer-mcp](https://github.com/mrmike/android-source-explorer-mcp) server in one go:
 
-```bash
-claude plugin add rcosteira79/android-skills
+```
+/plugin marketplace add rcosteira79/android-skills
+/plugin install android-skills@android-skills
 ```
 
 Updates are picked up automatically when the plugin version is bumped.
