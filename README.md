@@ -19,13 +19,13 @@ Updates are picked up automatically when the plugin version is bumped.
 
 #### MCP server (optional)
 
-The plugin includes a config for [android-source-explorer-mcp](https://github.com/mrmike/android-source-explorer-mcp), but the server binary must be installed separately:
+For enhanced source code navigation (local source sync, Tree-sitter parsing, class hierarchy, LSP), install [android-source-explorer-mcp](https://github.com/mrmike/android-source-explorer-mcp) separately:
 
 ```bash
 uv tool install git+https://github.com/mrmike/android-source-explorer-mcp
 ```
 
-Without it, the `android-source-search` skill still works as a fallback (fetches source via Gitiles/GitHub).
+The `android-source-search` skill will automatically use the MCP tools if available, and falls back to Gitiles/GitHub otherwise.
 
 ### Claude Code (manual)
 
@@ -36,7 +36,7 @@ git clone https://github.com/rcosteira79/android-skills.git
 cp -r android-skills/plugins/android-skills/skills/* ~/.claude/skills/
 ```
 
-Note: the manual approach does not install the MCP server. See [android-source-explorer-mcp](https://github.com/mrmike/android-source-explorer-mcp) for separate setup instructions.
+Note: the manual approach does not include the MCP server. See the optional MCP section above.
 
 ### Copilot CLI (plugin)
 
@@ -69,7 +69,7 @@ Debugging Android and KMP issues — Logcat, ADB, ANR traces, R8 stack trace dec
 ### `android-source-search`
 Fetch and verify Android source code — AOSP platform internals (`@hide` APIs, framework classes, system services via Gitiles) and AndroidX/Jetpack library source and samples (via GitHub). Also useful when public docs are insufficient to complete a task.
 
-> This skill is a zero-setup fallback. The plugin bundles [android-source-explorer-mcp](https://github.com/mrmike/android-source-explorer-mcp) which goes much further: local source sync, sub-10ms Tree-sitter parsing, method-level extraction, class hierarchy, and cross-file navigation via LSP.
+> This skill is a zero-setup fallback. For enhanced capabilities (local source sync, sub-10ms Tree-sitter parsing, method-level extraction, class hierarchy, LSP), install [android-source-explorer-mcp](https://github.com/mrmike/android-source-explorer-mcp) separately — the skill will use it automatically when available.
 
 ### `kotlin-coroutines`
 Dispatcher selection, scope management, structured concurrency, cancellation, exception handling, and Android/KMP async patterns. Includes the DispatcherProvider pattern for testable dispatcher injection.
@@ -123,7 +123,7 @@ Gradle build optimisation — Build Scans, configuration cache, build cache, kap
 
 - [awesome-android-agent-skills](https://github.com/new-silvermoon/awesome-android-agent-skills) — curated list of Android agent skills that inspired many of the skills in this repo
 - [compose-skill](https://github.com/aldefy/compose-skill) — alternative Compose skill that bundles a static AndroidX snapshot
-- [android-source-explorer-mcp](https://github.com/mrmike/android-source-explorer-mcp) — MCP server for navigating Android source code (bundled with this plugin)
+- [android-source-explorer-mcp](https://github.com/mrmike/android-source-explorer-mcp) — MCP server for navigating Android source code (optional, used by `android-source-search` skill)
 - [android-reverse-engineering-skill](https://github.com/SimoneAvogadro/android-reverse-engineering-skill) — Claude Code plugin for decompiling APKs, extracting API endpoints, and tracing call flows
 
 ## License
