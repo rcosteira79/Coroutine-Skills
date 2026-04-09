@@ -27,11 +27,20 @@ class NewsRepository @Inject constructor(
             newsDao.insertAll(remoteNews.map { it.toDomain() })
             Result.success(Unit)
         } catch (e: IOException) {
-            Result.failure(e)
+            Result.failure(DataError.Network(e))
         } catch (e: HttpException) {
-            Result.failure(e)
+            Result.failure(DataError.Server(e.code(), e.message()))
         }
     }
+}
+
+// Domain-level errors — never expose HTTP/IO types above the data layer.
+// Ask the user if this structure fits their project. Adapt naming, granularity,
+// and hierarchy to match existing error conventions if present.
+sealed class DataError(message: String, cause: Throwable? = null) : Exception(message, cause) {
+    class Network(cause: Throwable) : DataError("Network error", cause)
+    class Server(val code: Int, message: String?) : DataError("Server error $code: $message")
+    class Local(cause: Throwable) : DataError("Local storage error", cause)
 }
 ```
 
@@ -48,9 +57,15 @@ abstract fun bindNewsRepository(impl: OfflineFirstNewsRepository): NewsRepositor
 
 ### Entity
 
+**Ask the user** which naming convention they prefer for cached/database models:
+- `Entity` suffix (e.g. `ArticleEntity`) — Room convention, ties the name to the persistence layer
+- `Cached` prefix (e.g. `CachedArticle`) — abstracts the cache mechanism, useful if the storage backend might change
+
+If the project already has a convention, match it. If no preference, default to `Entity` suffix.
+
 ```kotlin
 @Entity(tableName = "articles")
-data class ArticleEntity(
+data class ArticleEntity(       // or CachedArticle
     @PrimaryKey val id: String,
     val title: String,
     val body: String,
@@ -155,7 +170,7 @@ Keep three distinct model types and map between them at layer boundaries:
 | Layer | Model Type | Purpose |
 |-------|-----------|---------|
 | Network | DTO (`ArticleDto`) | Matches API JSON structure |
-| Database | Entity (`ArticleEntity`) | Matches Room table schema |
+| Database | Entity (`ArticleEntity`) or Cached (`CachedArticle`) | Matches Room table schema — naming per user preference |
 | Domain/UI | Domain model (`Article`) | What the rest of the app uses |
 
 ```kotlin
@@ -181,7 +196,7 @@ fun ArticleEntity.toDomain(): Article = Article(
 ## Checklist
 
 - [ ] Repository exposes `Flow` for streams and `suspend fun` returning `Result<T>` for one-shot operations
-- [ ] Raw DTOs and entities never reach the ViewModel — map at the repository boundary
+- [ ] Raw DTOs, entities, and HTTP/IO exceptions never reach the ViewModel — map to domain models and domain errors at the repository boundary
 - [ ] Room DAOs return `Flow` for observed queries; `suspend` for mutations
 - [ ] Schema exported (`exportSchema = true`) and migration scripts provided for version bumps
 - [ ] Offline-first: local DB is the source of truth; network writes go through an outbox if reliability matters
