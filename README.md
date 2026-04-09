@@ -28,13 +28,20 @@ cp -r android-skills/skills/* ~/.claude/skills/
 
 Note: the manual approach does not install the MCP server. See [android-source-explorer-mcp](https://github.com/mrmike/android-source-explorer-mcp) for separate setup instructions.
 
+### Copilot CLI (plugin)
+
+Copilot CLI detects the same plugin format automatically:
+
+```bash
+copilot plugin install rcosteira79/android-skills
+```
+
 ### Cursor, Windsurf, and other agentic editors
 
 The skills are plain markdown files. Copy the content of whichever `SKILL.md` files are relevant into your editor's context mechanism:
 
 - **Cursor** — add to `.cursor/rules/` as `.mdc` files
 - **Windsurf** — add to `.windsurf/rules/` as `.md` files
-- **Copilot** — add to `.github/copilot-instructions.md`
 - **Other editors** — paste into your project's custom instructions or context file
 
 Each skill is self-contained and can be used independently.
