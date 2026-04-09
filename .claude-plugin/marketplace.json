@@ -1,0 +1,13 @@
+{
+  "name": "android-skills",
+  "owner": {
+    "name": "Ricardo Costeira"
+  },
+  "plugins": [
+    {
+      "name": "android-skills",
+      "source": "./.",
+      "description": "Android and KMP development skills for Claude Code — architecture, Compose, coroutines, flows, testing, debugging, Gradle, and Material Design 3"
+    }
+  ]
+}
