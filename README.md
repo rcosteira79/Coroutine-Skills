@@ -33,7 +33,7 @@ Alternatively, copy the skill directories into your Claude Code skills folder:
 
 ```bash
 git clone https://github.com/rcosteira79/android-skills.git
-cp -r android-skills/skills/* ~/.claude/skills/
+cp -r android-skills/plugins/android-skills/skills/* ~/.claude/skills/
 ```
 
 Note: the manual approach does not install the MCP server. See [android-source-explorer-mcp](https://github.com/mrmike/android-source-explorer-mcp) for separate setup instructions.
