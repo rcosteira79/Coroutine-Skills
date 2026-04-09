@@ -7,18 +7,14 @@
   },
   "metadata": {
     "description": "Android and KMP development skills for Claude Code — architecture, Compose, coroutines, flows, testing, debugging, Gradle, and Material Design 3",
-    "version": "2.3.0"
+    "version": "2.4.0"
   },
   "plugins": [
     {
       "name": "android-skills",
-      "source": {
-        "source": "git-subdir",
-        "url": "https://github.com/rcosteira79/android-skills.git",
-        "path": "plugins/android-skills"
-      },
+      "source": "./plugins/android-skills",
       "description": "Android and KMP development skills for Claude Code — architecture, Compose, coroutines, flows, testing, debugging, Gradle, and Material Design 3",
-      "version": "2.3.0",
+      "version": "2.4.0",
       "author": {
         "name": "Ricardo Costeira"
       },
