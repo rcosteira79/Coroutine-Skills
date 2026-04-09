@@ -4,6 +4,59 @@ Claude Code skills for Android and KMP development — covering architecture, da
 
 Several skills in this collection were inspired by or built on top of work from the community — specifically [awesome-android-agent-skills](https://github.com/new-silvermoon/awesome-android-agent-skills) and [compose-skill](https://github.com/aldefy/compose-skill). Each skill below is marked as either **original** or notes what it was inspired by / forked from.
 
+## Installation
+
+### Claude Code (plugin)
+
+Install as a plugin to get all 15 skills and the [android-source-explorer-mcp](https://github.com/mrmike/android-source-explorer-mcp) server in one go:
+
+```
+/plugin marketplace add rcosteira79/android-skills
+/plugin install android-skills@android-skills
+```
+
+Updates are picked up automatically when the plugin version is bumped.
+
+### Claude Code (manual)
+
+Alternatively, copy the skill directories into your Claude Code skills folder:
+
+```bash
+git clone https://github.com/rcosteira79/android-skills.git
+cp -r android-skills/skills/* ~/.claude/skills/
+```
+
+Note: the manual approach does not install the MCP server. See [android-source-explorer-mcp](https://github.com/mrmike/android-source-explorer-mcp) for separate setup instructions.
+
+### Cursor, Windsurf, and other agentic editors
+
+The skills are plain markdown files. Copy the content of whichever `SKILL.md` files are relevant into your editor's context mechanism:
+
+- **Cursor** — add to `.cursor/rules/` as `.mdc` files
+- **Windsurf** — add to `.windsurf/rules/` as `.md` files
+- **Copilot** — add to `.github/copilot-instructions.md`
+- **Other editors** — paste into your project's custom instructions or context file
+
+Each skill is self-contained and can be used independently.
+
+Skills are invoked automatically based on context:
+
+- Working on Android or KMP code → `android-dev` skill activates
+- Writing or fixing tests → `android-tdd` skill activates
+- Debugging Android issues → `android-debugging` skill activates
+- Designing or reviewing Android UI → `android-ux` skill activates
+- Working with Compose → `compose` skill activates
+- Fetching Android/AndroidX source or when public docs aren't enough → `android-source-search` skill activates
+- Working with coroutines → `kotlin-coroutines` skill activates
+- Working with Flow/StateFlow/SharedFlow → `kotlin-flows` skill activates
+- Migrating from RxJava → ask Claude to migrate, `rxjava-migration` skill activates
+- Migrating XML layouts to Compose → `xml-to-compose-migration` skill activates
+- Setting up networking with Retrofit → `android-retrofit` skill activates
+- Implementing the data/repository layer → `android-data-layer` skill activates
+- Loading images with Coil → `coil-compose` skill activates
+- Setting up Gradle build logic → `android-gradle-logic` skill activates
+- Optimising build performance → `gradle-build-performance` skill activates
+
 ## Skills
 
 ### `android-dev`
@@ -70,59 +123,6 @@ Scalable Gradle build logic — Convention Plugins, composite builds, shared `co
 Gradle build optimisation — Build Scans, configuration cache, build cache, kapt→KSP migration, parallel execution, lazy task configuration, and a recommended `gradle.properties` baseline.
 
 > Inspired by [awesome-android-agent-skills](https://github.com/new-silvermoon/awesome-android-agent-skills)
-
-## Installation
-
-### Claude Code (plugin)
-
-Install as a plugin to get all 15 skills and the [android-source-explorer-mcp](https://github.com/mrmike/android-source-explorer-mcp) server in one go:
-
-```
-/plugin marketplace add rcosteira79/android-skills
-/plugin install android-skills@android-skills
-```
-
-Updates are picked up automatically when the plugin version is bumped.
-
-### Claude Code (manual)
-
-Alternatively, copy the skill directories into your Claude Code skills folder:
-
-```bash
-git clone https://github.com/rcosteira79/android-skills.git
-cp -r android-skills/skills/* ~/.claude/skills/
-```
-
-Note: the manual approach does not install the MCP server. See [android-source-explorer-mcp](https://github.com/mrmike/android-source-explorer-mcp) for separate setup instructions.
-
-Skills are invoked automatically based on context:
-
-- Working on Android or KMP code → `android-dev` skill activates
-- Writing or fixing tests → `android-tdd` skill activates
-- Debugging Android issues → `android-debugging` skill activates
-- Designing or reviewing Android UI → `android-ux` skill activates
-- Working with Compose → `compose` skill activates
-- Fetching Android/AndroidX source or when public docs aren't enough → `android-source-search` skill activates
-- Working with coroutines → `kotlin-coroutines` skill activates
-- Working with Flow/StateFlow/SharedFlow → `kotlin-flows` skill activates
-- Migrating from RxJava → ask Claude to migrate, `rxjava-migration` skill activates
-- Migrating XML layouts to Compose → `xml-to-compose-migration` skill activates
-- Setting up networking with Retrofit → `android-retrofit` skill activates
-- Implementing the data/repository layer → `android-data-layer` skill activates
-- Loading images with Coil → `coil-compose` skill activates
-- Setting up Gradle build logic → `android-gradle-logic` skill activates
-- Optimising build performance → `gradle-build-performance` skill activates
-
-### Cursor, Windsurf, and other agentic editors
-
-The skills are plain markdown files. Copy the content of whichever `SKILL.md` files are relevant into your editor's context mechanism:
-
-- **Cursor** — add to `.cursor/rules/` as `.mdc` files
-- **Windsurf** — add to `.windsurf/rules/` as `.md` files
-- **Copilot** — add to `.github/copilot-instructions.md`
-- **Other editors** — paste into your project's custom instructions or context file
-
-Each skill is self-contained and can be used independently.
 
 ## Related Projects
 
