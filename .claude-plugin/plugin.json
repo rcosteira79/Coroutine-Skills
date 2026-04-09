@@ -1,12 +1,24 @@
 {
-  "name": "kotlin-skills",
-  "description": "Kotlin coroutines, flows, and RxJava migration skills for Claude Code",
-  "version": "1.0.0",
+  "name": "android-skills",
+  "description": "Android and KMP development skills for Claude Code — architecture, Compose, coroutines, flows, testing, debugging, Gradle, and Material Design 3",
+  "version": "2.0.0",
   "author": {
     "name": "Ricardo Costeira"
   },
-  "homepage": "https://github.com/rcosteira79/coroutine-skills",
-  "repository": "https://github.com/rcosteira79/coroutine-skills",
+  "homepage": "https://github.com/rcosteira79/android-skills",
+  "repository": "https://github.com/rcosteira79/android-skills",
   "license": "MIT",
-  "keywords": ["kotlin", "coroutines", "flows", "rxjava", "android", "kmp"]
+  "keywords": [
+    "android",
+    "kotlin",
+    "kmp",
+    "compose",
+    "coroutines",
+    "flows",
+    "material3",
+    "jetpack",
+    "gradle"
+  ],
+  "skills": "./skills/",
+  "mcpServers": "./.mcp.json"
 }

@@ -1,6 +1,6 @@
 ---
 name: android-ux
-description: Use when designing or reviewing Android UI — applies Material Design 3 UX principles covering touch targets, spacing, navigation patterns, accessibility, animation timing, and platform conventions. Complements the compose skill with design-level decisions.
+description: Use when designing or reviewing Android UI — applies Material Design 3 UX principles covering touch targets, spacing, navigation patterns, accessibility, animation timing, and platform conventions. Includes an M3 compliance audit that scores screens across 10 categories. Complements the compose skill with design-level decisions.
 ---
 
 # Android UX
@@ -248,6 +248,101 @@ TextField(
 - Enable autofill with `Modifier.semantics { contentType = ContentType.EmailAddress }`
 - Show a password visibility toggle on all password fields
 - Validate inline on focus-out, not on every keystroke
+
+---
+
+## M3 Compliance Audit
+
+Use this when reviewing a screen or feature for Material Design 3 compliance. Score each category as **Pass**, **Partial**, or **Fail**, then address any Partial/Fail items before shipping.
+
+### 1. Color tokens
+
+- All colors reference `MaterialTheme.colorScheme` roles — no hardcoded hex/ARGB values
+- Correct role usage: `primary` for key actions, `secondary` for less prominent elements, `tertiary` for accents, `error` for error states
+- `surface`, `surfaceVariant`, `surfaceContainerLow/High` used for layered surfaces — not arbitrary grays
+- `on*` colors paired correctly (e.g. text on `primary` uses `onPrimary`)
+- Dynamic color supported on Android 12+ (`dynamicLightColorScheme` / `dynamicDarkColorScheme`) with a static fallback
+
+### 2. Typography
+
+- All text styles come from `MaterialTheme.typography` — no inline `fontSize`/`fontWeight` overrides
+- Correct scale usage: `display*` for hero text, `headline*` for section headers, `title*` for card/dialog titles, `body*` for content, `label*` for buttons and captions
+- No use of deprecated or custom text styles that bypass the type scale
+
+### 3. Shape
+
+- Corner radii come from `MaterialTheme.shapes` — not hardcoded `RoundedCornerShape` values
+- Correct shape scale: `extraSmall` (4dp) for chips/small elements, `small` (8dp) for cards, `medium` (12dp) for dialogs, `large` (16dp) for sheets, `extraLarge` (28dp) for FABs
+- Consistent shape language across the screen — don't mix sharp and rounded arbitrarily
+
+### 4. Elevation & surface
+
+- Elevation expressed through **tonal color** (surface containers), not drop shadows — M3 uses tonal elevation
+- Shadow elevation reserved for components that need it (dialogs, menus, FABs)
+- `ElevatedCard`, `ElevatedButton` used instead of manual `shadowElevation` on generic surfaces
+
+### 5. Components
+
+- Using M3 components (`androidx.compose.material3.*`), not Material 2 (`androidx.compose.material.*`)
+- No M2/M3 component mixing on the same screen
+- Components used as intended: `FloatingActionButton` for the primary screen action, `Card` for grouped content, `TopAppBar` for screen-level actions — not repurposed for unrelated patterns
+
+### 6. Layout & spacing
+
+- 8dp grid respected for all padding and margins
+- Content width constrained on wide screens (no full-bleed text on tablets)
+- Responsive breakpoints applied: compact / medium / expanded window size classes
+
+### 7. Navigation
+
+- Navigation component matches screen width (Bottom Bar / Rail / Drawer)
+- Items have both icon and label
+- Current destination visually indicated via `selected` state with active indicator
+
+### 8. Motion
+
+- Transitions use M3 easing and duration tokens (see Animation Timing section)
+- Shared element transitions use `Emphasized` easing at 300–500ms
+- Enter/exit patterns follow M3 conventions (fade through, container transform)
+- Animations are interruptible and respect reduced motion
+
+### 9. Accessibility
+
+- All meaningful images/icons have `contentDescription`
+- Contrast ratios meet WCAG AA (4.5:1 body, 3:1 large text and UI components)
+- Touch targets meet 48dp minimum
+- Screen reader traversal order is logical (`semantics { traversalIndex }` where needed)
+- Section headings marked with `semantics { heading() }`
+
+### 10. Theming consistency
+
+- Single `MaterialTheme` wrapping the app — no nested or conflicting themes
+- Light and dark themes both tested and functional
+- Custom theme extensions (if any) use `CompositionLocal`, not global objects
+- Brand colors integrated via custom `ColorScheme`, not by overriding individual component colors
+
+### Audit summary template
+
+```
+Screen: [name]
+Date: [date]
+
+| # | Category              | Score   | Notes                  |
+|---|-----------------------|---------|------------------------|
+| 1 | Color tokens          | Pass    |                        |
+| 2 | Typography            | Partial | bodySmall hardcoded    |
+| 3 | Shape                 | Pass    |                        |
+| 4 | Elevation & surface   | Pass    |                        |
+| 5 | Components            | Fail    | M2 Scaffold still used |
+| 6 | Layout & spacing      | Partial | No tablet breakpoint   |
+| 7 | Navigation            | Pass    |                        |
+| 8 | Motion                | Pass    |                        |
+| 9 | Accessibility         | Partial | Missing headings       |
+| 10| Theming consistency   | Pass    |                        |
+
+Action items:
+- [ ] ...
+```
 
 ---
 

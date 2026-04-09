@@ -1,0 +1,8 @@
+{
+  "mcpServers": {
+    "android-sources": {
+      "command": "npx",
+      "args": ["-y", "android-source-explorer-mcp@latest"]
+    }
+  }
+}
