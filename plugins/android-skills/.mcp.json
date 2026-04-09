@@ -1,8 +1,0 @@
-{
-  "mcpServers": {
-    "android-sources": {
-      "command": "android-source-explorer",
-      "args": ["serve"]
-    }
-  }
-}
