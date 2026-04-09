@@ -75,7 +75,7 @@ Debugging Android and KMP issues — Logcat, ADB, ANR traces, R8 stack trace dec
 ### `android-source-search`
 Fetch and verify Android source code — AOSP platform internals (`@hide` APIs, framework classes, system services via Gitiles) and AndroidX/Jetpack library source and samples (via GitHub). Also useful when public docs are insufficient to complete a task.
 
-> **Looking for more power?** [android-source-explorer-mcp](https://github.com/mrmike/android-source-explorer-mcp) is a purpose-built MCP server that goes much further: local source sync, sub-10ms Tree-sitter parsing, method-level extraction, class hierarchy, and cross-file navigation via LSP. If you're doing serious framework investigation, set that up instead — this skill is the zero-setup fallback.
+> This skill is a zero-setup fallback. The plugin bundles [android-source-explorer-mcp](https://github.com/mrmike/android-source-explorer-mcp) which goes much further: local source sync, sub-10ms Tree-sitter parsing, method-level extraction, class hierarchy, and cross-file navigation via LSP.
 
 ### `kotlin-coroutines`
 Dispatcher selection, scope management, structured concurrency, cancellation, exception handling, and Android/KMP async patterns. Includes the DispatcherProvider pattern for testable dispatcher injection.
