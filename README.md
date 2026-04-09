@@ -36,6 +36,8 @@ Copilot CLI detects the same plugin format automatically:
 copilot plugin install rcosteira79/android-skills
 ```
 
+### Other agentic editors
+
 Each skill is self-contained — the `SKILL.md` files are plain markdown, so they can be adapted to other editors that support custom instructions.
 
 Skills are invoked automatically based on context:
