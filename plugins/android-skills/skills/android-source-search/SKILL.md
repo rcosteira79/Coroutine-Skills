@@ -9,7 +9,28 @@ description: Use when needing to fetch Android source code — AOSP platform int
 
 Two separate source trees, two access strategies. AOSP lives on `android.googlesource.com` (Gitiles); AndroidX lives on GitHub. **`cs.android.com` blocks automated fetching** — it's for human browsing only.
 
-## Which Source?
+## Preferred: android-source-explorer MCP
+
+If `mcp__android-sources__*` tools are available, **always prefer them** over WebFetch/gh. They provide local source with sub-10ms lookups:
+
+| Goal | MCP tool |
+|------|----------|
+| Find a class by name/pattern | `mcp__android-sources__search_classes` (glob, e.g. `*ViewModel*`) |
+| Read full class source | `mcp__android-sources__lookup_class` (by fully qualified name) |
+| Read a specific method | `mcp__android-sources__lookup_method` (class + method name) |
+| List members of a class | `mcp__android-sources__list_class_members` |
+| Get class hierarchy | `mcp__android-sources__get_class_hierarchy` |
+| Search text/regex across sources | `mcp__android-sources__search_in_source` |
+| List AndroidX artifact versions | `mcp__android-sources__list_available_versions` |
+| Go to definition (requires LSP) | `mcp__android-sources__goto_definition` |
+| Find references (requires LSP) | `mcp__android-sources__find_references` |
+| Get type info/hover (requires LSP) | `mcp__android-sources__get_type_info` |
+
+If MCP tools are not available, fall back to the WebFetch/gh strategies below.
+
+## Fallback: WebFetch and gh CLI
+
+### Which Source?
 
 | You need... | Source | Access method |
 |-------------|--------|---------------|
@@ -19,7 +40,7 @@ Two separate source trees, two access strategies. AOSP lives on `android.googles
 | AndroidX samples (e.g. `LookaheadScope`, `LazyColumn`) | AndroidX GitHub | WebFetch → raw.githubusercontent.com |
 | Directory listings (when path is unknown) | AndroidX GitHub | `gh api` via Bash |
 
-## AOSP — Fetching via Gitiles
+### AOSP — Fetching via Gitiles
 
 ### HTML view
 ```
@@ -44,7 +65,7 @@ https://android.googlesource.com/platform/frameworks/base/+/refs/heads/main/{pat
 ### Path inference
 `android.view.ViewGroup` → `core/java/android/view/ViewGroup.java`
 
-## AndroidX — Fetching via GitHub
+### AndroidX — Fetching via GitHub
 
 ### File content (WebFetch)
 ```
@@ -72,7 +93,7 @@ gh api repos/androidx/androidx/contents/{path} --jq '.[].name'
 https://raw.githubusercontent.com/androidx/androidx/androidx-main/compose/ui/ui/samples/src/main/java/androidx/compose/ui/samples/LookaheadScopeSamples.kt
 ```
 
-## Search Strategy (path unknown)
+### Search Strategy (path unknown)
 
 1. Use `cs.android.com` as a **human search UI** to find the class/file path
 2. For AOSP: fetch via Gitiles once path is known
