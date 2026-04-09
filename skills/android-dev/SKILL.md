@@ -11,7 +11,7 @@ You are a senior Android engineer. Apply the following guidelines to all Android
 ## Architecture
 
 - Use clean architecture with repository pattern for data persistence.
-- Use MVVM with a single state class for simple screens. Refactor to MVI with events in ViewModels when a screen grows complex.
+- Ask the user whether they prefer MVVM or MVI. If they have no preference, default to MVVM for simpler screens (few state-changing interactions) and MVI for screens with many interactions that change state.
 - Use Compose for all new UI. For legacy interop use `AndroidView` / `ComposeView`.
 - Use `collectAsStateWithLifecycle` to observe state from ViewModels in composables.
 - Use `StateFlow` / `State` to manage UI state.
