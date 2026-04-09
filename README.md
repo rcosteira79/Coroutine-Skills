@@ -8,7 +8,7 @@ Several skills in this collection were inspired by or built on top of work from 
 
 ### Claude Code (plugin)
 
-Install as a plugin to get all skills and the [android-source-explorer-mcp](https://github.com/mrmike/android-source-explorer-mcp) server in one go:
+Install as a plugin to get all skills:
 
 ```
 /plugin marketplace add rcosteira79/android-skills
@@ -16,6 +16,16 @@ Install as a plugin to get all skills and the [android-source-explorer-mcp](http
 ```
 
 Updates are picked up automatically when the plugin version is bumped.
+
+#### MCP server (optional)
+
+The plugin includes a config for [android-source-explorer-mcp](https://github.com/mrmike/android-source-explorer-mcp), but the server binary must be installed separately:
+
+```bash
+brew install mrmike/android-source-explorer-mcp/android-source-explorer
+```
+
+Without it, the `android-source-search` skill still works as a fallback (fetches source via Gitiles/GitHub).
 
 ### Claude Code (manual)
 
