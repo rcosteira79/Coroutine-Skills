@@ -422,7 +422,7 @@ fun ShimmerLoadingList() {
 }
 ```
 
-**Rule:** Wrap all shimmer and placeholder drawing in `runCatching` or explicit size guards. Provide a solid-color fallback so the loading state is never invisible and never crashes.
+**Rule:** Wrap all shimmer and placeholder drawing in `try/catch` or explicit size guards. Provide a solid-color fallback so the loading state is never invisible and never crashes. Avoid `runCatching` in suspend contexts — it catches `CancellationException` and breaks structured concurrency.
 
 ---
 

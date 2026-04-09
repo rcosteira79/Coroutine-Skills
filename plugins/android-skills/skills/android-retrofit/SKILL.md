@@ -138,14 +138,12 @@ Catch network exceptions at the repository layer. Never let `HttpException`, `IO
 class GitHubRepository @Inject constructor(
     private val service: GitHubService
 ) {
-    suspend fun listRepos(user: String): Result<List<Repo>> = runCatching {
-        service.listRepos(user)
-    }.recoverCatching { throwable ->
-        when (throwable) {
-            is HttpException -> throw NetworkException.HttpError(throwable.code(), throwable.message())
-            is IOException -> throw NetworkException.ConnectionError(throwable)
-            else -> throw throwable
-        }
+    suspend fun listRepos(user: String): Result<List<Repo>> = try {
+        Result.success(service.listRepos(user))
+    } catch (e: HttpException) {
+        Result.failure(NetworkException.HttpError(e.code(), e.message()))
+    } catch (e: IOException) {
+        Result.failure(NetworkException.ConnectionError(e))
     }
 }
 

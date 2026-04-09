@@ -22,9 +22,14 @@ class NewsRepository @Inject constructor(
 
     // Triggered by UI or WorkManager to refresh data
     suspend fun refreshNews(): Result<Unit> = withContext(ioDispatcher) {
-        runCatching {
+        try {
             val remoteNews = newsApi.fetchLatest()
             newsDao.insertAll(remoteNews.map { it.toDomain() })
+            Result.success(Unit)
+        } catch (e: IOException) {
+            Result.failure(e)
+        } catch (e: HttpException) {
+            Result.failure(e)
         }
     }
 }

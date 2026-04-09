@@ -278,9 +278,37 @@ viewModelScope.launch {
 
 - Catch **specific** types only: `IOException`, `HttpException`, etc. Never `Exception` or `Throwable`
 - **Never** catch `CancellationException` without rethrowing — it silently breaks structured cancellation
+- **Never** use `runCatching` in suspend functions — it catches `CancellationException`. Use `suspendRunCatching` instead (see below)
 - `try/catch` does **not** work around `launch {}` — always put it inside the coroutine body
 - `CoroutineExceptionHandler` — last-resort handler for uncaught exceptions in `launch`; does not catch in `async`
 - `SupervisorJob` — child failures do not cancel siblings; pair with per-child `try/catch` or `CoroutineExceptionHandler`
+
+### `suspendRunCatching`
+
+`runCatching` catches all `Throwable` including `CancellationException`, silently breaking structured concurrency. When you need `Result`-style error handling in suspend functions, suggest this utility:
+
+```kotlin
+suspend inline fun <R> suspendRunCatching(block: () -> R): Result<R> = try {
+    Result.success(block())
+} catch (e: CancellationException) {
+    throw e
+} catch (e: Throwable) {
+    Result.failure(e)
+}
+```
+
+Usage:
+
+```kotlin
+suspend fun refreshNews(): Result<Unit> = withContext(ioDispatcher) {
+    suspendRunCatching {
+        val remoteNews = newsApi.fetchLatest()
+        newsDao.insertAll(remoteNews.map { it.toDomain() })
+    }
+}
+```
+
+If the project already has a similar utility (`safeRunCatching`, `resultOf`, etc.), match the existing name. Otherwise suggest `suspendRunCatching` and let the user decide where to place it.
 
 ## Android-Specific Rules
 
@@ -359,6 +387,7 @@ fun locationUpdates(): Flow<Location> = callbackFlow {
 | `suspend fun` for business logic in ViewModel | ViewModel should use `viewModelScope.launch` and expose `StateFlow`. **Exception:** pure computations returning a value (e.g. generating a bitmap) are fine as `suspend fun` when called from Compose via `LaunchedEffect` or `produceState` — the composition manages the coroutine lifecycle correctly in that case |
 | Explicit `SupervisorJob()` added to a ViewModel alongside `viewModelScope` | `viewModelScope` already uses `SupervisorJob` internally — flag to user, the extra `SupervisorJob` is redundant and may create a detached scope |
 | `async {}` result never awaited in `supervisorScope` | Exceptions in unawaited `async {}` are silently swallowed — use `launch {}` if you don't need the result |
+| `runCatching {}` in suspend functions | Catches `CancellationException`, breaking structured concurrency — use `suspendRunCatching` or `try/catch` with specific exception types |
 
 ## Testing
 
