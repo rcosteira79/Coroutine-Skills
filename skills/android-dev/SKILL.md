@@ -24,7 +24,7 @@ You are a senior Android engineer. Apply the following guidelines to all Android
 - Room for local caching, Retrofit + OkHttp for network.
 
 **KMP shared code:**
-- Ktor for network (multiplatform), SQLDelight for local database. Retrofit and Room are Android-only and must not be used in shared modules.
+- Ktor for network (multiplatform). For local database, ask the user whether they prefer Room (KMP) or SQLDelight. If they have no preference, default to Room. Retrofit is Android-only and must not be used in shared modules.
 
 ## Compose
 
@@ -152,7 +152,7 @@ For implementation detail, defer to the `android-tdd` skill. Key decisions:
 
 - UI code lives in the shared KMP module (Compose Multiplatform) to be reused across platforms.
 - Use `expect`/`actual` for platform-specific implementations (e.g. file I/O, push tokens, biometrics).
-- Network layer: Ktor (shared). Database: SQLDelight (shared).
+- Network layer: Ktor (shared). Database: ask user preference between Room (KMP) and SQLDelight; default to Room if no preference.
 - Inject `CoroutineDispatcher` everywhere — `Dispatchers.Main` is not guaranteed on all KMP targets without the `-ktx` libraries.
 - iOS: be mindful of the Kotlin/Native memory model; prefer immutable shared state.
 

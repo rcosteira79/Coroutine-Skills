@@ -361,7 +361,7 @@ stringResource(Res.string.greeting)
 |-------------|-----------------|-------|
 | Hilt (`hiltViewModel()`) | Koin (`koinViewModel()`) | Koin has first-class KMP support. Koin 4.0+ has Compose annotations. |
 | Retrofit | Ktor Client | Ktor has multiplatform HTTP engines per platform. |
-| Room | SQLDelight | SQLDelight generates Kotlin from SQL. Room KMP is experimental (2.7.0-alpha). |
+| Room | Room (KMP) or SQLDelight | Ask user preference. Room KMP is stable from 2.7.0+; SQLDelight generates Kotlin from SQL. Default to Room if no preference. |
 | Coil 2.x | Coil 3.x KMP | Coil 3.0+ is fully multiplatform. Same API. |
 | Lottie | Kottie / Compottie | See Lottie gotcha above. |
 | `R.drawable.*`, `R.string.*` | `Res.drawable.*`, `Res.string.*` | Compose Resources replaces Android resources. |
