@@ -367,7 +367,7 @@ fun locationUpdates(): Flow<Location> = callbackFlow {
 
 ## KMP-Specific Rules
 
-- Use `MainScope()` for shared UI-layer coroutine scope in common code
+- Do not use `MainScope()` — it creates an unstructured scope (`Dispatchers.Main + SupervisorJob()`) with the same problems as `GlobalScope`: no lifecycle awareness, must be manually cancelled, hard to test. Instead, inject a `CoroutineScope` from the platform layer (e.g. `viewModelScope` on Android, a lifecycle-bound scope on iOS via `CoroutineScope(SupervisorJob() + Dispatchers.Main)` tied to the view controller lifecycle).
 - Inject `CoroutineDispatcher` as a dependency for platform-specific implementations
 - Use `expect`/`actual` for `Dispatchers.Main.immediate` if not available on all platforms
 
@@ -391,7 +391,7 @@ fun locationUpdates(): Flow<Location> = callbackFlow {
 
 ## Testing
 
-**Always ask the user before writing tests.**
+**Ask the user before writing tests** — unless `android-skills:android-tdd` is active, in which case tests are written first as part of the TDD cycle.
 
 Use `runTest` — automatically skips delays and manages virtual time.
 

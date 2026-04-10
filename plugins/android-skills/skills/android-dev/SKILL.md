@@ -107,7 +107,7 @@ Add a domain layer when business logic outgrows the ViewModel or business rules 
 **Error propagation by layer:**
 
 1. **Data sources** — throw platform/library exceptions (`IOException`, `HttpException`, `SQLiteException`, etc.).
-2. **Repositories** — catch platform exceptions and remap to domain exception types (e.g. `NetworkException`, `CacheException`). Never let raw data-layer exceptions leak past this boundary.
+2. **Repositories** — catch platform exceptions and remap to domain error types (e.g. `DataError.Network`, `DataError.Local`). Use a single sealed error hierarchy for the data layer — see `android-skills:android-data-layer`. Never let raw data-layer exceptions leak past this boundary.
 3. **Use cases** — catch domain exceptions and return `Result<T>`, where the error type is a domain model. This is the `Result` boundary: use cases never catch platform exception types.
 4. **ViewModels** — handle `Result<T>` and map to UI state.
 
@@ -117,7 +117,7 @@ Add a domain layer when business logic outgrows the ViewModel or business rules 
 
 - Use `navigation-compose 2.8+` with type-safe `@Serializable` route objects (not string routes).
 - Single Activity host (`MainActivity`). Navigate via `NavController` — never from the ViewModel directly.
-- Emit one-time navigation events from the ViewModel via `Channel` + `receiveAsFlow()`, not `SharedFlow`.
+- For one-time navigation/UI events from the ViewModel, ask the user: if exactly-once delivery is required (event must never be missed), use `Channel` + `receiveAsFlow()`; if events can be missed when UI is inactive, `SharedFlow(replay = 0)` is simpler. See `android-skills:kotlin-flows` for full trade-offs.
 - See `compose/references/navigation.md` for full patterns.
 
 ## Background Work

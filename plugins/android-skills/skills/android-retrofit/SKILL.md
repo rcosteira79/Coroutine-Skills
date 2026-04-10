@@ -132,7 +132,9 @@ object NetworkModule {
 
 ## Error Handling in Repositories
 
-Catch network exceptions at the repository layer. Never let `HttpException`, `IOException`, or `UnknownHostException` leak into the ViewModel.
+Catch network exceptions at the repository layer. Never let `HttpException`, `IOException`, or `UnknownHostException` leak into the ViewModel. See `android-skills:android-data-layer` for the full repository pattern including offline-first strategies.
+
+Use the project's existing domain error types. If none exist, use a unified sealed class for all data-layer errors (not separate hierarchies per data source):
 
 ```kotlin
 class GitHubRepository @Inject constructor(
@@ -141,15 +143,17 @@ class GitHubRepository @Inject constructor(
     suspend fun listRepos(user: String): Result<List<Repo>> = try {
         Result.success(service.listRepos(user))
     } catch (e: HttpException) {
-        Result.failure(NetworkException.HttpError(e.code(), e.message()))
+        Result.failure(DataError.Server(e.code(), e.message()))
     } catch (e: IOException) {
-        Result.failure(NetworkException.ConnectionError(e))
+        Result.failure(DataError.Network(e))
     }
 }
 
-sealed class NetworkException(message: String) : Exception(message) {
-    class HttpError(val code: Int, message: String) : NetworkException(message)
-    class ConnectionError(cause: Throwable) : NetworkException(cause.message ?: "Connection failed")
+// Reuse the same error hierarchy across the data layer — see android-skills:android-data-layer
+sealed class DataError(message: String, cause: Throwable? = null) : Exception(message, cause) {
+    class Network(cause: Throwable) : DataError("Network error", cause)
+    class Server(val code: Int, message: String?) : DataError("Server error $code: $message")
+    class Local(cause: Throwable) : DataError("Local storage error", cause)
 }
 ```
 

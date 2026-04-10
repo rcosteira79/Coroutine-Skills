@@ -334,7 +334,7 @@ lifecycleScope.launch {
 
 ## Testing
 
-**Always ask the user before writing tests.**
+**Ask the user before writing tests** — unless `android-skills:android-tdd` is active, in which case tests are written first as part of the TDD cycle.
 
 Use [Turbine](https://github.com/cashapp/turbine) for flow testing:
 

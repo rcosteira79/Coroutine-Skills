@@ -206,9 +206,31 @@ Respect the user's system font size — never clamp `fontSize` to a fixed value 
 Rules:
 - Animations must be **interruptible** — a tap during animation should respond immediately
 - Never block user input during an animation
-- Respect `LocalReducedMotion` — skip or simplify motion when the user has enabled reduced motion:
+- Respect reduced motion settings — skip or simplify motion when the user has enabled "Remove animations" in system accessibility settings. Compose does not provide a built-in `LocalReducedMotion` CompositionLocal, so create one or check the system setting:
 
 ```kotlin
+// Option 1: Check system setting via CompositionLocal (create once, provide from theme)
+val LocalReducedMotion = staticCompositionLocalOf {
+    false // default: animations enabled
+}
+
+// In your theme, read the system setting:
+@Composable
+fun AppTheme(content: @Composable () -> Unit) {
+    val context = LocalContext.current
+    val reduceMotion = remember {
+        Settings.Global.getFloat(
+            context.contentResolver,
+            Settings.Global.ANIMATOR_DURATION_SCALE,
+            1f
+        ) == 0f
+    }
+    CompositionLocalProvider(LocalReducedMotion provides reduceMotion) {
+        MaterialTheme(...) { content() }
+    }
+}
+
+// Then use it in composables:
 val reducedMotion = LocalReducedMotion.current
 
 AnimatedVisibility(

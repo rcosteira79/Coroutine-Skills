@@ -103,6 +103,8 @@ Common patterns:
 
 ### Compose Recomposition Bugs
 
+For deeper Compose performance analysis (stability, recomposition skipping, baseline profiles), see `android-skills:compose` → `references/performance.md`.
+
 Wrong state or unexpected re-renders:
 
 1. **Layout Inspector** (Android Studio) → enable "Show recomposition counts" to identify hot paths
@@ -110,14 +112,7 @@ Wrong state or unexpected re-renders:
 3. Check that `State` objects are not created inside the composition (use `remember`)
 4. Verify `equals()` on state data classes — a new object with same values still triggers recomposition if `equals` is not implemented
 
-```kotlin
-// BAD: creates new lambda every recomposition -> child always recomposes
-MyButton(onClick = { viewModel.doAction() })
-
-// GOOD: stable lambda reference
-val onClickAction = remember { { viewModel.doAction() } }
-MyButton(onClick = onClickAction)
-```
+**Note:** Since Compose compiler 2.0+ (Kotlin 2.0+), strong skipping mode is enabled by default and the compiler automatically memoizes lambdas that capture stable references. Manual `remember {{ }}` wrapping is no longer necessary in most cases. If you see excessive recomposition from lambdas, check whether the captured references are unstable (mutable collections, non-data classes) rather than wrapping in `remember`.
 
 ## ADB Quick Reference
 

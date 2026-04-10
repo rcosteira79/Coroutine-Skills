@@ -7,6 +7,8 @@ description: Use when implementing the data layer in Android — Repository patt
 
 The data layer coordinates data from multiple sources. Its public API to the rest of the app is repository interfaces; its internal implementation details (DAOs, API services, DTOs) never leak upward.
 
+**Related skills:** See `android-skills:android-retrofit` for Retrofit service setup, OkHttp configuration, and Hilt module wiring. See `android-skills:android-dev` for how the data layer fits into the overall architecture and error propagation model.
+
 ## Repository Pattern
 
 The repository is the **single source of truth**. It decides whether to serve cached data or fetch fresh data, and maps raw data-layer types to domain models.
@@ -43,6 +45,8 @@ sealed class DataError(message: String, cause: Throwable? = null) : Exception(me
     class Local(cause: Throwable) : DataError("Local storage error", cause)
 }
 ```
+
+**With a domain layer:** When use cases exist, the repository throws `DataError` exceptions instead of returning `Result<T>`. Use cases catch `DataError` and return `Result<T>` with domain-specific error models. See `android-skills:android-dev` Error Handling section for the full layered propagation model.
 
 Bind the interface to its implementation in a Hilt module:
 
