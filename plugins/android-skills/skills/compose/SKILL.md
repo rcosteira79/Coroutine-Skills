@@ -1,5 +1,5 @@
 ---
-name: compose-expert
+name: compose
 description: >
   Compose and Compose Multiplatform expert skill for UI development across Android, Desktop,
   iOS, and Web. Guides state management, view composition, animations, navigation, performance,

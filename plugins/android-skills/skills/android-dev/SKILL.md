@@ -8,6 +8,10 @@ user-invocable: true
 
 You are a senior Android engineer. Apply the following guidelines to all Android and KMP work.
 
+## Skill Invocation Rule
+
+**Always use fully qualified names when invoking skills from this plugin.** Use the `android-skills:` prefix — e.g., `android-skills:compose`, `android-skills:kotlin-coroutines`, `android-skills:android-tdd`. Never use short names like `compose` or `kotlin-coroutines` alone.
+
 ## Architecture
 
 - Use clean architecture with repository pattern for data persistence.
@@ -28,15 +32,15 @@ You are a senior Android engineer. Apply the following guidelines to all Android
 
 ## Compose
 
-For implementation detail, defer to the `compose`. Key architectural decisions:
+For implementation detail, defer to `android-skills:compose`. Key architectural decisions:
 
 - Hoist state to the lowest common ancestor — composables receive state and emit events upward.
 - Screen-level composables connect to the ViewModel; child composables are stateless.
-- For Compose specifics (stability, `remember`, Modifiers, side effects, navigation), the `compose` is the authoritative source.
+- For Compose specifics (stability, `remember`, Modifiers, side effects, navigation), `android-skills:compose` is the authoritative source.
 
 ## Async & Concurrency
 
-For implementation detail, defer to the `kotlin-coroutines` and `kotlin-flows` skills. Key decisions:
+For implementation detail, defer to `android-skills:kotlin-coroutines` and `android-skills:kotlin-flows`. Key decisions:
 
 - Use Kotlin Coroutines and Flow for all async work. No `LiveData` in new code.
 - `viewModelScope` for ViewModel coroutines; inject `CoroutineDispatcher` for testability.
@@ -74,7 +78,7 @@ Follow a feature-vertical module structure:
 
 - `:feature:*` modules depend on `:core:domain` and `:core:ui` — never on each other
 - Domain models in `:core:model` have zero Android framework dependencies
-- See `android-gradle-logic` skill for Convention Plugin setup to share build config across modules
+- See `android-skills:android-gradle-logic` for Convention Plugin setup to share build config across modules
 
 ## Data Flow
 
@@ -140,7 +144,7 @@ WorkManager.getInstance(context).enqueueUniquePeriodicWork(
 
 ## Testing
 
-For implementation detail, defer to the `android-tdd` skill. Key decisions:
+For implementation detail, defer to `android-skills:android-tdd`. Key decisions:
 
 - Unit tests for use cases and mappers (pure JVM, no Android dependency).
 - Integration tests per ViewModel: fake data sources, real ViewModel logic.
