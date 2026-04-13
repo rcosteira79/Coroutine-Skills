@@ -125,6 +125,55 @@ Scale navigation and content layout based on window size class:
 | Medium (600–840dp) | Navigation Rail | Two pane optional |
 | Expanded (>840dp) | Navigation Drawer | Two pane |
 
+### Canonical layouts
+
+M3 defines three canonical layout patterns. Start from one of these rather than building from a raw grid:
+
+- **Feed** — browsable collection of items (social feed, news, product grid). Single column on compact, 2-column on medium, 3+ columns on expanded.
+- **List-Detail** — list of items with detailed content (email, contacts, file browser). Single pane with navigation on compact, side-by-side list (1/3) + detail (2/3) on medium+.
+- **Supporting Pane** — primary content with supplementary info (document + properties, video + comments). Stacked on compact, side-by-side (2/3 primary + 1/3 supporting) on medium+.
+
+### Foldable postures
+
+Foldable devices introduce postures beyond standard window size classes. Use `WindowInfoTracker` and `FoldingFeature` from Jetpack WindowManager to detect them:
+
+| Posture | Description | Layout behavior |
+|---|---|---|
+| Flat (unfolded) | Device fully open | Treat as Medium or Expanded based on width |
+| Half-opened (tabletop) | Horizontal fold, bottom half on surface | Content on top half, controls on bottom half |
+| Half-opened (book) | Vertical fold, held like a book | List on left half, detail on right half |
+| Folded | Device closed, cover screen | Treat as Compact |
+
+**Critical rule:** Never place interactive content or critical information across the hinge area.
+
+```kotlin
+@Composable
+fun FoldAwareLayout() {
+    val context = LocalContext.current
+    val layoutInfo by WindowInfoTracker.getOrCreate(context)
+        .windowLayoutInfo(context as Activity)
+        .collectAsStateWithLifecycle(initialValue = WindowLayoutInfo(emptyList()))
+
+    val foldingFeature = layoutInfo.displayFeatures
+        .filterIsInstance<FoldingFeature>()
+        .firstOrNull()
+
+    when {
+        foldingFeature?.state == FoldingFeature.State.HALF_OPENED -> {
+            if (foldingFeature.orientation == FoldingFeature.Orientation.HORIZONTAL) {
+                TabletopLayout()  // top: content, bottom: controls
+            } else {
+                BookLayout()  // left: list, right: detail
+            }
+        }
+        else -> {
+            // Standard adaptive layout based on window size class
+            StandardAdaptiveLayout()
+        }
+    }
+}
+```
+
 ---
 
 ## Accessibility
@@ -188,6 +237,30 @@ Text(
 - Body text: **4.5:1** against background (WCAG AA)
 - Large text (18sp+ / 14sp+ bold) and UI components: **3:1**
 - Test in both light and dark themes independently
+
+### M3 contrast levels
+
+Material Design 3 supports three contrast levels that adjust the tonal distance between paired color roles (e.g., `primary` and `onPrimary`):
+
+| Level | Value | Effect |
+|---|---|---|
+| Standard | 0.0 | Default tonal distance |
+| Medium | 0.5 | Increased tonal distance, easier to read |
+| High | 1.0 | Maximum tonal distance, highest legibility |
+
+Compose's `dynamicLightColorScheme`/`dynamicDarkColorScheme` do **not** expose a contrast parameter — they read the system's current setting automatically (SDK 34+). To offer in-app contrast control, use `material-color-utilities` directly:
+
+```kotlin
+// Generate a contrast-adjusted scheme from a seed color
+val hct = Hct.fromInt(argbFromHex("#6750A4"))
+val scheme = SchemeContent(hct, isDark = false, contrast = 1.0) // high contrast
+
+val colorScheme = lightColorScheme(
+    primary = Color(scheme.primary),
+    onPrimary = Color(scheme.onPrimary),
+    // ... map remaining roles from scheme
+)
+```
 
 ### Dynamic type
 
