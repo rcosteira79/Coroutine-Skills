@@ -516,26 +516,44 @@ class ProfileViewModel : ViewModel() {
 
 ViewModels should expose `StateFlow` (via `MutableStateFlow` + `asStateFlow()`). Compose state (`mutableStateOf`) belongs in `@Composable` functions and state holder classes annotated with `@Stable`. This keeps ViewModels testable without the Compose runtime.
 
-### Rule 2: SharedFlow for Events, Not Channel
+### Rule 2: Choose Between Channel and SharedFlow Based on Delivery Guarantees
+
+One-shot UI events (navigation, snackbars, dialogs) need a delivery mechanism from the ViewModel. The right choice depends on whether events can be missed:
+
+- **`Channel`** — exactly-once delivery to one consumer. `send()` on a default (rendezvous) channel **suspends** until a receiver is ready; on a buffered channel, elements are preserved in the buffer. Events are never silently dropped (except `CONFLATED`). Use when a missed event is a visible bug (navigation commands, one-time side effects).
+- **`SharedFlow(replay = 0)`** — broadcast to all active collectors. `emit()` **silently drops** the value when no collectors exist. Use SharedFlow only when missing an event during brief inactivity is acceptable, or when the collector is guaranteed to be active for the entire relevant window (e.g. `LaunchedEffect(Unit)` which collects for the composable's full composition lifetime).
+
+**Never use `collectAsStateWithLifecycle` for events.** It preserves the last emission as a `State<T>` value, which means the event persists as state and can be re-consumed on recomposition. Events are fire-once — collect them with `collect` inside a `LaunchedEffect`, not as state. Reserve `collectAsStateWithLifecycle` for `StateFlow` (UI state that should always reflect the latest value).
+
+Also note that `repeatOnLifecycle` stops collection when the lifecycle drops below the target state (default: `STARTED`). During that window there are zero collectors on a SharedFlow and emissions are lost. Both `repeatOnLifecycle` and `collectAsStateWithLifecycle` accept a configurable `minActiveState` / lifecycle state parameter.
 
 ```kotlin
-// BAD: Channel drops events when no collector is active
+// Channel — exactly-once, never drops (default rendezvous suspends sender until collected)
 class OrderViewModel : ViewModel() {
     private val _events = Channel<UiEvent>()
     val events = _events.receiveAsFlow()
+
+    fun onAction() {
+        viewModelScope.launch {
+            _events.send(UiEvent.NavigateToConfirmation) // suspends if no collector
+        }
+    }
 }
 
-// GOOD: SharedFlow with buffer handles brief collector gaps
+// SharedFlow — broadcast, drops when no collectors exist
 class OrderViewModel : ViewModel() {
-    private val _events = MutableSharedFlow<UiEvent>(
-        extraBufferCapacity = 1,
-        onBufferOverflow = BufferOverflow.DROP_OLDEST
-    )
+    private val _events = MutableSharedFlow<UiEvent>()
     val events: SharedFlow<UiEvent> = _events.asSharedFlow()
+
+    fun onAction() {
+        viewModelScope.launch {
+            _events.emit(UiEvent.ShowSnackbar("Done")) // lost if no collector
+        }
+    }
 }
 ```
 
-`Channel` is a hot stream that requires an active collector. During configuration changes or lifecycle transitions, events are silently dropped. `SharedFlow` with `extraBufferCapacity = 1` buffers one event during brief collector gaps.
+See `android-skills:kotlin-flows` for the full trade-off analysis and guidance on when to ask the user.
 
 ### Rule 3: rememberSaveable Only at NavGraph Level
 

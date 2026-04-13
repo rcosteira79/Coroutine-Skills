@@ -499,15 +499,21 @@ class MyViewModel : ViewModel() {
 }
 ```
 
-### 2. SharedFlow for one-shot events, NOT Channel
+### 2. Choose Channel or SharedFlow for one-shot events based on delivery guarantees
+
+`Channel` guarantees exactly-once delivery (sender suspends or buffers until consumed). `SharedFlow(replay = 0)` silently drops emissions when no collector exists. Choose based on whether missed events are acceptable — see `android-skills:kotlin-flows` for the full trade-off.
 
 ```kotlin
-// GOOD: SharedFlow with buffer for one-shot events
-private val _events = MutableSharedFlow<AppEvent>(extraBufferCapacity = 1)
+// SharedFlow — collect events with collect in LaunchedEffect, never with collectAsStateWithLifecycle
+// (collectAsStateWithLifecycle preserves the last emission as state, causing re-consumption on recomposition)
+private val _events = MutableSharedFlow<AppEvent>()
 val events = _events.asSharedFlow()
 
-// Emit from ViewModel
-fun onAction() { _events.tryEmit(AppEvent.ShowSnackbar("Done")) }
+fun onAction() {
+    viewModelScope.launch {
+        _events.emit(AppEvent.ShowSnackbar("Done"))
+    }
+}
 
 // Collect in composable
 LaunchedEffect(Unit) {

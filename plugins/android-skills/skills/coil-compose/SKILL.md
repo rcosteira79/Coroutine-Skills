@@ -1,9 +1,9 @@
 ---
 name: coil-compose
-description: Use when loading images in Jetpack Compose with Coil — AsyncImage vs SubcomposeAsyncImage vs rememberAsyncImagePainter, ImageRequest configuration, placeholder/error states, and performance in lists.
+description: Use when loading images in Compose or Compose Multiplatform with Coil 3 — AsyncImage vs SubcomposeAsyncImage vs rememberAsyncImagePainter, ImageRequest configuration, placeholder/error states, performance in lists, and KMP setup with LocalPlatformContext.
 ---
 
-# Coil for Jetpack Compose
+# Coil 3 for Compose & Compose Multiplatform
 
 ## Primary API: `AsyncImage`
 
@@ -11,7 +11,7 @@ Use `AsyncImage` for the vast majority of cases. It resolves the image size from
 
 ```kotlin
 AsyncImage(
-    model = ImageRequest.Builder(LocalContext.current)
+    model = ImageRequest.Builder(LocalPlatformContext.current)
         .data("https://example.com/avatar.jpg")
         .crossfade(true)
         .build(),
@@ -54,7 +54,7 @@ Use only when a `Painter` is strictly required (e.g., `Canvas`, `Icon`, or a cus
 
 ```kotlin
 val painter = rememberAsyncImagePainter(
-    model = ImageRequest.Builder(LocalContext.current)
+    model = ImageRequest.Builder(LocalPlatformContext.current)
         .data("https://example.com/image.jpg")
         .size(Size.ORIGINAL)  // Must specify size — not inferred automatically
         .build()
@@ -69,7 +69,7 @@ Image(painter = painter, contentDescription = null)
 ## ImageRequest Configuration
 
 ```kotlin
-ImageRequest.Builder(context)
+ImageRequest.Builder(platformContext)
     .data(imageUrl)
     .crossfade(300)                            // Smooth fade-in (ms)
     .size(200, 200)                            // Explicit size to avoid over-fetching
@@ -82,9 +82,11 @@ ImageRequest.Builder(context)
 
 ---
 
-## Hilt Setup
+## Singleton ImageLoader Setup
 
-Provide a single `ImageLoader` instance for the whole app to share disk and memory caches:
+Provide a single `ImageLoader` instance for the whole app to share disk and memory caches.
+
+### Android with Hilt
 
 ```kotlin
 @Module
@@ -101,15 +103,31 @@ object ImageModule {
 }
 ```
 
-Pass it to `AsyncImage` via `LocalContext` or inject it directly:
+### KMP (commonMain)
+
+Use `SingletonImageLoader.setSafe` early in the app lifecycle, or pass `ImageLoader` explicitly:
 
 ```kotlin
+// Option 1: Set the singleton factory (call once at app startup)
+SingletonImageLoader.setSafe {
+    ImageLoader.Builder(it)
+        .crossfade(true)
+        .build()
+}
+
+// Option 2: Pass ImageLoader explicitly (no singleton needed)
+val imageLoader = ImageLoader.Builder(LocalPlatformContext.current)
+    .crossfade(true)
+    .build()
+
 AsyncImage(
     model = url,
     contentDescription = null,
-    imageLoader = imageLoader  // Injected via hiltViewModel or passed as param
+    imageLoader = imageLoader
 )
 ```
+
+When using the `coil-compose` module (not `coil-compose-core`), `AsyncImage` without an `imageLoader` parameter automatically uses the singleton. With `coil-compose-core`, the `imageLoader` parameter is required.
 
 ---
 
@@ -124,6 +142,31 @@ AsyncImage(
 
 ---
 
+## KMP / Compose Multiplatform
+
+Coil 3.x is fully multiplatform. The `AsyncImage`, `SubcomposeAsyncImage`, and `rememberAsyncImagePainter` APIs are identical in `commonMain` — no `expect`/`actual` needed.
+
+**Key difference:** Use `LocalPlatformContext.current` instead of `LocalContext.current`. On Android this resolves to `android.content.Context`; on other platforms it resolves to a singleton `PlatformContext.INSTANCE`.
+
+```kotlin
+// commonMain — works on all platforms
+@Composable
+fun Avatar(url: String) {
+    AsyncImage(
+        model = ImageRequest.Builder(LocalPlatformContext.current)
+            .data(url)
+            .crossfade(true)
+            .build(),
+        contentDescription = "User avatar",
+        modifier = Modifier.size(48.dp).clip(CircleShape)
+    )
+}
+```
+
+**Dependencies:** Use `coil-compose` (singleton convenience) or `coil-compose-core` (explicit `imageLoader` parameter) in your `commonMain` source set. Add platform-specific network engines as needed (e.g., `coil-network-ktor3` for KMP networking).
+
+---
+
 ## Checklist
 
 - [ ] `AsyncImage` preferred over other variants
@@ -132,3 +175,4 @@ AsyncImage(
 - [ ] `SubcomposeAsyncImage` not used inside `LazyColumn` / `LazyRow`
 - [ ] Single `ImageLoader` instance provided app-wide (shared cache)
 - [ ] Explicit `.size()` set when using `rememberAsyncImagePainter`
+- [ ] `LocalPlatformContext` used instead of `LocalContext` (KMP compatibility)

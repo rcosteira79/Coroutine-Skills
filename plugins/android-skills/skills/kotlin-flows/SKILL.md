@@ -283,8 +283,8 @@ fun onItemClick(id: String) {
 
 > "Do you need guaranteed exactly-once delivery (the event must never be missed even if the UI is temporarily inactive), or is it acceptable to miss an event if no collector is subscribed at that moment?"
 
-- **Can miss events when UI is inactive** → `SharedFlow(replay = 0)` with `repeatOnLifecycle` — simpler, no backpressure risk; preferred when `repeatOnLifecycle` ensures the collector is always active
-- **Must never miss an event** → `Channel` — guarantees exactly-once delivery; suited for navigation commands or one-time side effects where a missed event would be a bug
+- **Can miss events when UI is inactive** → `SharedFlow(replay = 0)` — simpler, no backpressure risk. Collect with `collect` inside a `LaunchedEffect`, never with `collectAsStateWithLifecycle` (which preserves the last emission as state, causing events to be re-consumed on recomposition). Be aware that `repeatOnLifecycle` stops collection when the lifecycle drops below the target state (configurable, default `STARTED`) — emissions during that window are lost. Use when that trade-off is acceptable (e.g. non-critical UI effects like tooltips or sounds)
+- **Must never miss an event** → `Channel` — guarantees exactly-once delivery; `send()` suspends or buffers until a receiver consumes the value. Suited for navigation commands or one-time side effects where a missed event would be a visible bug
 
 ## Lifecycle-Safe Collection (Android)
 

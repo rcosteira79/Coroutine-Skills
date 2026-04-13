@@ -59,6 +59,10 @@ every { mockRepo.save(any()) } just Runs
 verify { mockRepo.save(expectedUser) } // tests implementation, not behaviour
 ```
 
+## Assertion Library
+
+Match the project's existing assertion library. If there is no established convention, ask the user which they prefer. Common options: kotlin-test (`assertEquals`, `assertIs`), Google Truth (`assertThat(...).isEqualTo(...)`), Kotest matchers (`shouldBe`, `shouldBeInstanceOf`). The examples in this skill use kotlin-test style — adapt to the project's choice.
+
 ## Coroutine Testing
 
 Use `runTest` for all suspend functions. Never use `runBlocking` in tests.
