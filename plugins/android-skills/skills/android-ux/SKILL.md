@@ -151,7 +151,7 @@ Foldable devices introduce postures beyond standard window size classes. Use `Wi
 fun FoldAwareLayout() {
     val context = LocalContext.current
     val layoutInfo by WindowInfoTracker.getOrCreate(context)
-        .windowLayoutInfo(context as Activity)
+        .windowLayoutInfo(context)  // accepts @UiContext — Activity, InputMethodService, or createWindowContext()
         .collectAsStateWithLifecycle(initialValue = WindowLayoutInfo(emptyList()))
 
     val foldingFeature = layoutInfo.displayFeatures
@@ -248,10 +248,12 @@ Material Design 3 supports three contrast levels that adjust the tonal distance 
 | Medium | 0.5 | Increased tonal distance, easier to read |
 | High | 1.0 | Maximum tonal distance, highest legibility |
 
-Compose's `dynamicLightColorScheme`/`dynamicDarkColorScheme` do **not** expose a contrast parameter — they read the system's current setting automatically (SDK 34+). To offer in-app contrast control, use `material-color-utilities` directly:
+Compose's `dynamicLightColorScheme`/`dynamicDarkColorScheme` do **not** expose a contrast parameter — they read the system's current setting automatically (SDK 34+). To offer in-app contrast control, use `material-color-utilities` (`com.google.material:material-color-utilities`) directly:
 
 ```kotlin
-// Generate a contrast-adjusted scheme from a seed color
+// Requires: implementation("com.google.material:material-color-utilities:<version>")
+// Imports: com.google.material.color.utilities.Hct, SchemeContent
+
 val hct = Hct.fromInt(argbFromHex("#6750A4"))
 val scheme = SchemeContent(hct, isDark = false, contrast = 1.0) // high contrast
 
@@ -389,6 +391,8 @@ Use this when reviewing a screen or feature for Material Design 3 compliance. Sc
 - 8dp grid respected for all padding and margins
 - Content width constrained on wide screens (no full-bleed text on tablets)
 - Responsive breakpoints applied: compact / medium / expanded window size classes
+- Screen maps to a canonical layout (Feed, List-Detail, or Supporting Pane) where applicable
+- Foldable postures handled: no content across hinge, tabletop/book mode layouts where relevant
 
 ### 7. Navigation
 
@@ -407,6 +411,7 @@ Use this when reviewing a screen or feature for Material Design 3 compliance. Sc
 
 - All meaningful images/icons have `contentDescription`
 - Contrast ratios meet WCAG AA (4.5:1 body, 3:1 large text and UI components)
+- M3 contrast levels considered (Standard/Medium/High) if the app supports user-controlled contrast
 - Touch targets meet 48dp minimum
 - Screen reader traversal order is logical (`semantics { traversalIndex }` where needed)
 - Section headings marked with `semantics { heading() }`
@@ -457,3 +462,5 @@ Before shipping any screen, verify:
 - [ ] Predictive back enabled if targeting Android 13+
 - [ ] Reduced motion respected
 - [ ] Keyboard type set correctly on all text inputs
+- [ ] Foldable: no interactive content or critical information placed across the hinge
+- [ ] Large screens: content width constrained (not stretching to fill ultra-wide)
