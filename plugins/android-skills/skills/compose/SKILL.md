@@ -53,6 +53,7 @@ Read the relevant reference file(s) from `references/` before answering:
 | `NavHost`, type-safe routes, deep links, shared element transitions | `references/navigation.md` |
 | `animate*AsState`, `AnimatedVisibility`, `Crossfade`, transitions | `references/animation.md` |
 | `MaterialTheme`, `ColorScheme`, dynamic color, `Typography`, shapes | `references/theming-material3.md` |
+| Touch targets, spacing, canonical layouts, foldables, M3 compliance audit | `android-skills:android-ux` |
 | Recomposition skipping, stability, baseline profiles, benchmarking | `references/performance.md` |
 | Semantics, content descriptions, traversal order, testing | `references/accessibility.md` |
 | Removed/replaced APIs, migration paths from older Compose versions | `references/deprecated-patterns.md` |

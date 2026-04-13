@@ -21,6 +21,8 @@ Look at the full screen first. What is the outermost structural pattern?
 | Side drawer + content | `ModalNavigationDrawer` + `Scaffold` |
 | Bottom sheet over content | `ModalBottomSheet` or `Scaffold` + `BottomSheetScaffold` |
 
+If the design maps to one of M3's canonical layouts (Feed, List-Detail, Supporting Pane), start from that pattern — see `android-skills:android-ux` for breakpoint behavior and foldable posture handling.
+
 ### Step 2: Decompose into Visual Sections (Top-Down)
 
 Scan the design from top to bottom. Draw horizontal lines between visually distinct sections. Each section becomes a composable or a block within the parent layout.

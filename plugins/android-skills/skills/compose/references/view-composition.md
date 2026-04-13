@@ -766,3 +766,5 @@ fun AdaptiveScreen(windowSizeClass: WindowSizeClass) {
 ```
 
 For navigation, use `NavigationSuiteScaffold` which automatically switches between bottom nav (compact), rail (medium), and drawer (expanded).
+
+For canonical layout patterns (Feed, List-Detail, Supporting Pane), foldable postures (tabletop, book mode), and M3 compliance auditing, see `android-skills:android-ux`.

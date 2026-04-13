@@ -37,6 +37,7 @@ For implementation detail, defer to `android-skills:compose`. Key architectural 
 - Hoist state to the lowest common ancestor — composables receive state and emit events upward.
 - Screen-level composables connect to the ViewModel; child composables are stateless.
 - For Compose specifics (stability, `remember`, Modifiers, side effects, navigation), `android-skills:compose` is the authoritative source.
+- For M3 UX patterns (touch targets, canonical layouts, foldable postures, accessibility, M3 compliance audit), see `android-skills:android-ux`.
 
 ## Async & Concurrency
 

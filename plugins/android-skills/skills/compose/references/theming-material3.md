@@ -67,6 +67,8 @@ MaterialTheme(colorScheme = colorScheme) { ... }
 
 This requires `android:READ_MEDIA_IMAGES` or context access. `dynamicColorScheme` APIs are in `androidx.compose.material3`.
 
+For M3 contrast levels (Standard/Medium/High) and in-app contrast control via `SchemeContent`, see `android-skills:android-ux`.
+
 ---
 
 ## Typography — Custom Type Scales
