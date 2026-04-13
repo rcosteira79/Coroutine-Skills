@@ -248,14 +248,15 @@ Material Design 3 supports three contrast levels that adjust the tonal distance 
 | Medium | 0.5 | Increased tonal distance, easier to read |
 | High | 1.0 | Maximum tonal distance, highest legibility |
 
-Compose's `dynamicLightColorScheme`/`dynamicDarkColorScheme` do **not** expose a contrast parameter — they read the system's current setting automatically (SDK 34+). To offer in-app contrast control, use `material-color-utilities` (`com.google.material:material-color-utilities`) directly:
+Compose's `dynamicLightColorScheme`/`dynamicDarkColorScheme` do **not** expose a contrast parameter — they read the system's current setting automatically (SDK 34+). To offer in-app contrast control, use `Hct` and `SchemeContent` from MDC-Android:
 
 ```kotlin
-// Requires: implementation("com.google.material:material-color-utilities:<version>")
-// Imports: com.google.material.color.utilities.Hct, SchemeContent
+// These classes live in com.google.android.material:material (MDC-Android)
+// Package: com.google.android.material.color.utilities
+// Note: marked @RestrictTo(LIBRARY_GROUP) — internal API, may change between versions
 
-val hct = Hct.fromInt(argbFromHex("#6750A4"))
-val scheme = SchemeContent(hct, isDark = false, contrast = 1.0) // high contrast
+val hct = Hct.fromInt(0xFF6750A4.toInt())
+val scheme = SchemeContent(hct, /* isDark = */ false, /* contrastLevel = */ 1.0)
 
 val colorScheme = lightColorScheme(
     primary = Color(scheme.primary),
@@ -263,6 +264,8 @@ val colorScheme = lightColorScheme(
     // ... map remaining roles from scheme
 )
 ```
+
+Since these are internal MDC APIs, check for updates when bumping Material library versions. Third-party KMP alternatives exist (e.g., `com.materialkolor:material-color-utilities`) if you need multiplatform support or a stable public API.
 
 ### Dynamic type
 
