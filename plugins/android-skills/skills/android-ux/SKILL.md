@@ -241,6 +241,8 @@ AnimatedVisibility(
 }
 ```
 
+> **Design note:** `staticCompositionLocalOf` and keyless `remember` mean the value is read once per Activity lifecycle. If the user toggles "Remove animations" in system settings and returns to the app, the stale value persists until the Activity is recreated. This is intentional — live-updating this setting is overkill for most apps. If you do need live updates, switch to `compositionLocalOf` and observe `ANIMATOR_DURATION_SCALE` via a `ContentObserver`.
+
 ---
 
 ## Forms & Input

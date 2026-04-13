@@ -48,7 +48,13 @@ After building (`./gradlew assembleRelease`), check the generated files in `buil
   unstable class ScreenState { unstable val items: List<Item> }
   ```
 
-A composable missing `skippable` means the compiler cannot skip it during recomposition, even when inputs haven't changed. Fix by stabilizing its parameters (see Stability section below).
+A composable missing `skippable` means the compiler cannot skip it during recomposition, even when inputs haven't changed. Fixing instability requires understanding *why* the type is unstable — check the `*_classes.txt` report to identify which properties the compiler considers unstable, then work inward:
+
+- **Unstable collection types** (`List`, `Set`, `Map`) — replace with `kotlinx.collections.immutable` equivalents (`ImmutableList`, `ImmutableSet`, `ImmutableMap`)
+- **All properties are stable but the class itself is not annotated** — add `@Stable` or `@Immutable` (only if the contract genuinely holds — `@Stable` on a class with deeply unstable inner types is a lie that causes skipped recompositions and stale UI)
+- **Inner types are themselves unstable** — fix the inner types first, then the outer type becomes stable. This can cascade several levels deep
+- **Cross-module boundary** — the compiler can't infer stability across module boundaries. Add the class to `compose-stability-config.txt` to declare it stable globally
+- **Pragmatic opt-out** — `@Suppress("ComposeUnstableCollections")` per-function when the instability is harmless and the refactoring cost is not justified
 
 ### Stability — @Stable and @Immutable
 
@@ -524,39 +530,6 @@ Without `movableContentOf`, switching between layouts would dispose and recompos
 
 ---
 
-## Compiler Reports (Expanded)
-
-Enable compiler reports to see which composables are skippable and which types are stable:
-
-```kotlin
-// build.gradle.kts
-composeCompiler {
-    reportsDestination = layout.buildDirectory.dir("compose_reports")
-    metricsDestination = layout.buildDirectory.dir("compose_metrics")
-}
-```
-
-After building, check the output files:
-
-- `*_composables.txt` — shows each composable's status:
-  ```
-  restartable skippable fun MyComponent(name: String, onClick: Function0<Unit>)
-  restartable fun UnstableComponent(items: List<Item>)  // NOT skippable!
-  ```
-
-- `*_classes.txt` — shows type stability:
-  ```
-  stable class User { stable val name: String }
-  unstable class ScreenState { unstable val items: List<Item> }
-  ```
-
-Fix unstable types by:
-1. Using `@Stable` annotation on the class
-2. Using `kotlinx.collections.immutable.ImmutableList` instead of `List`
-3. Adding the class to `compose-stability-config.txt` for multi-module projects
-
----
-
 ## Production Performance Rules
 
 1. **R8: strip previews + semantics in release** — add to `proguard-rules.pro`:
@@ -573,7 +546,7 @@ fun ItemList(items: List<Item>) { // List is unstable but acceptable here
 }
 ```
 
-3. **ImmutableList for stability** — Guava `ImmutableList` or `kotlinx.collections.immutable`:
+3. **Immutable collections for stability** — `kotlinx.collections.immutable` (`ImmutableList`, `ImmutableSet`, `ImmutableMap`):
 ```kotlin
 // Makes the parameter stable, enabling recomposition skipping
 @Composable
