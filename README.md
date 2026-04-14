@@ -127,6 +127,7 @@ Gradle build optimisation — Build Scans, configuration cache, build cache, kap
 - [compose-skill](https://github.com/aldefy/compose-skill) — alternative Compose skill that bundles a static AndroidX snapshot
 - [android-source-explorer-mcp](https://github.com/mrmike/android-source-explorer-mcp) — MCP server for navigating Android source code (optional, used by `android-source-search` skill)
 - [material-3-skill](https://github.com/hamen/material-3-skill) — comprehensive Material Design 3 reference covering 30+ components, design tokens, theming, responsive layout, and dynamic color across platforms
+- [compose_skill](https://github.com/hamen/compose_skill) — strict, evidence-based Compose audit skill that scores repos on performance, state management, side effects, and API quality using automated Compose Compiler reports
 - [android-reverse-engineering-skill](https://github.com/SimoneAvogadro/android-reverse-engineering-skill) — Claude Code plugin for decompiling APKs, extracting API endpoints, and tracing call flows
 
 ## License
