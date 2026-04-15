@@ -202,33 +202,33 @@ fun ArticleEntity.toDomain(): Article = Article(
 ### DAO return types
 
 ```kotlin
-// WRONG — suspend fun for data the UI needs to observe; returns a snapshot, misses updates
+// WRONG — suspend fun when the UI needs to observe ongoing changes
 @Dao
 interface ArticleDao {
     @Query("SELECT * FROM articles")
-    suspend fun getAll(): List<ArticleEntity> // one-shot; UI won't see new inserts
+    suspend fun getAll(): List<ArticleEntity> // caller must re-query manually to see new inserts
 }
 
-// RIGHT — Flow for observable queries; suspend for one-shot reads and mutations
+// RIGHT — Flow for queries the UI observes; suspend for one-shot reads and mutations
 @Dao
 interface ArticleDao {
     @Query("SELECT * FROM articles ORDER BY publishedAt DESC")
     fun observeAll(): Flow<List<ArticleEntity>> // emits whenever table changes
 
     @Query("SELECT * FROM articles WHERE id = :id")
-    suspend fun findById(id: String): ArticleEntity? // one-shot lookup is fine
+    suspend fun findById(id: String): ArticleEntity? // one-shot lookup — suspend is correct
 
     @Upsert
     suspend fun upsertAll(articles: List<ArticleEntity>) // mutation — suspend is correct
 }
 ```
 
-WRONG because a `suspend fun` query returns a single snapshot. When new data is inserted (e.g., after a network refresh), the UI has no way to know — it must manually re-query. A `Flow` return type makes Room automatically re-emit whenever the underlying table changes, keeping the UI in sync without manual refresh logic.
+WRONG when the UI needs to stay in sync with the database — a `suspend fun` query returns a single snapshot, so inserts or updates after the initial load are invisible to the caller. A `Flow` return type makes Room automatically re-emit whenever the underlying table changes. That said, `suspend fun` is the right choice for one-shot queries where the caller only needs the current state — e.g., checking if a record exists before inserting, or loading data that won't change during the screen's lifetime.
 
-### Exposing data layer types to ViewModel
+### Exposing data layer types to the UI
 
 ```kotlin
-// WRONG — ViewModel uses Entity directly; leaks DB schema to UI layer
+// WRONG — ViewModel exposes Entity directly; couples UI to the database schema
 class ArticleViewModel(private val dao: ArticleDao) : ViewModel() {
     val articles = dao.observeAll() // Flow<List<ArticleEntity>>
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyList())
@@ -237,21 +237,23 @@ class ArticleViewModel(private val dao: ArticleDao) : ViewModel() {
 // In UI — forced to work with raw DB fields:
 Text(Instant.ofEpochMilli(entity.publishedAt).toString()) // raw Long from Room
 
-// RIGHT — repository maps Entity → Domain model; ViewModel exposes domain types
-class ArticleViewModel(private val repository: ArticleRepository) : ViewModel() {
-    val articles = repository.articlesStream // Flow<List<Article>>
-        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyList())
-}
-
-// In repository:
+// RIGHT — map at each layer boundary; UI works with UI models
+// Repository maps Entity → Domain (or directly to a model the ViewModel consumes):
 val articlesStream: Flow<List<Article>> = articleDao.observeAll()
     .map { entities -> entities.map { it.toDomain() } }
 
-// In UI — clean domain types:
-Text(article.formattedDate) // already formatted in domain model
+// ViewModel maps Domain → UI model:
+class ArticleViewModel(private val repository: ArticleRepository) : ViewModel() {
+    val articles = repository.articlesStream
+        .map { articles -> articles.map { it.toUiModel() } }
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyList())
+}
+
+// In UI — stable UI model with presentation-ready fields:
+Text(uiArticle.formattedDate) // formatting lives in toUiModel(), not in the domain
 ```
 
-WRONG because the ViewModel depends on Room's `ArticleEntity`, which is tied to the database schema. If you add a column, rename a field, or change the table structure, the UI layer breaks. The repository should map entities to domain models — the ViewModel and UI only depend on the stable domain contract.
+WRONG because the ViewModel exposes `ArticleEntity` directly to the UI, coupling it to the database schema — adding a column or renaming a field breaks the UI. The exact mapping chain depends on the architecture: with a domain layer, the repository maps Entity → Domain and the ViewModel maps Domain → UI model; without a domain layer, the ViewModel (or repository) maps the data model to a UI model directly. Either way, the UI works with stable UI models and never sees data layer types. Presentation logic like date formatting belongs in the UI model mapping, not in the domain model.
 
 ### Error boundary placement
 

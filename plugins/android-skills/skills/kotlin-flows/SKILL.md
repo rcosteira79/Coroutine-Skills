@@ -367,9 +367,15 @@ repository.getItems()
             logger.error(e)
         }
     }
+
+// RIGHT — use Flow's catch operator for upstream errors (skips CancellationException automatically)
+repository.getItems()
+    .onEach { items -> processItems(items) }
+    .catch { e -> logger.error(e) }
+    .collect()
 ```
 
-WRONG because `catch (e: Exception)` intercepts `CancellationException`, which prevents the coroutine from being cancelled. The flow keeps running even after the parent scope is cancelled, leaking resources. This is the single most common coroutine bug.
+WRONG because `catch (e: Exception)` intercepts `CancellationException`, which prevents the coroutine from being cancelled. The flow keeps running even after the parent scope is cancelled, leaking resources. This is the single most common coroutine bug. Flow's `catch` operator is often the cleanest alternative — it catches exceptions from upstream operators (like `onEach` or `map`) and automatically skips `CancellationException`.
 
 ### Side effects inside `combine`/`map` transforms
 

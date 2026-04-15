@@ -269,7 +269,8 @@ service.getSettings("Bearer $token")
 // RIGHT — interceptor adds token automatically to all requests
 class AuthInterceptor(private val tokenProvider: TokenProvider) : Interceptor {
     override fun intercept(chain: Interceptor.Chain): Response {
-        val token = tokenProvider.getToken() ?: return chain.proceed(chain.request())
+        val token = tokenProvider.getToken()
+            ?: throw IOException("Auth token unavailable") // fail fast — see note below
         val request = chain.request().newBuilder()
             .header("Authorization", "Bearer $token")
             .build()
@@ -286,6 +287,8 @@ suspend fun getSettings(): Settings
 ```
 
 WRONG because adding `@Header("Authorization")` to every endpoint is repetitive and fragile — one missing parameter means an unauthenticated request that fails at runtime, not compile time. An OkHttp interceptor applies the token uniformly to all requests.
+
+> **Throw vs proceed:** Throw when all endpoints require auth — a missing token should surface immediately rather than producing a confusing 401. If the `OkHttpClient` is shared between authenticated and public endpoints, proceed without the header instead: `?: return chain.proceed(chain.request())`.
 
 ## Checklist
 
