@@ -7,14 +7,14 @@
   },
   "metadata": {
     "description": "Android and KMP development skills for Claude Code — architecture, Compose, coroutines, flows, testing, debugging, Gradle, and Material Design 3",
-    "version": "2.7.1"
+    "version": "2.7.8"
   },
   "plugins": [
     {
       "name": "android-skills",
       "source": "./plugins/android-skills",
       "description": "Android and KMP development skills for Claude Code — architecture, Compose, coroutines, flows, testing, debugging, Gradle, and Material Design 3",
-      "version": "2.7.1",
+      "version": "2.7.8",
       "author": {
         "name": "Ricardo Costeira"
       },
