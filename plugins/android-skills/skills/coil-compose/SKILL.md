@@ -167,6 +167,96 @@ fun Avatar(url: String) {
 
 ---
 
+## RIGHT vs WRONG Patterns
+
+### Size inference with `rememberAsyncImagePainter`
+
+```kotlin
+// WRONG — no size specified; loads image at original dimensions (e.g. 4000x3000), wastes memory
+val painter = rememberAsyncImagePainter(
+    model = ImageRequest.Builder(LocalPlatformContext.current)
+        .data(url)
+        .build()
+)
+Image(painter = painter, contentDescription = null, modifier = Modifier.size(64.dp))
+
+// RIGHT — AsyncImage infers size from layout constraints automatically
+AsyncImage(
+    model = url,
+    contentDescription = null,
+    modifier = Modifier.size(64.dp) // Coil loads at ~64dp resolution, not full size
+)
+
+// RIGHT — if rememberAsyncImagePainter is needed, specify .size() explicitly
+val painter = rememberAsyncImagePainter(
+    model = ImageRequest.Builder(LocalPlatformContext.current)
+        .data(url)
+        .size(Size(128, 128))
+        .build()
+)
+```
+
+WRONG because `rememberAsyncImagePainter` does not infer the display size from Compose layout constraints. Without an explicit `.size()`, Coil loads the image at its original dimensions — a 4000x3000 photo displayed at 64dp still occupies the full bitmap in memory. In a list with 50 items, this causes OOM crashes.
+
+### `SubcomposeAsyncImage` in scrolling lists
+
+```kotlin
+// WRONG — subcomposition in LazyColumn causes frame drops and jank
+LazyColumn {
+    items(images) { url ->
+        SubcomposeAsyncImage(model = url, contentDescription = null) {
+            when (painter.state) {
+                is AsyncImagePainter.State.Loading -> CircularProgressIndicator()
+                else -> SubcomposeAsyncImageContent()
+            }
+        }
+    }
+}
+
+// RIGHT — AsyncImage with placeholder/error parameters; no subcomposition overhead
+LazyColumn {
+    items(images) { url ->
+        AsyncImage(
+            model = url,
+            contentDescription = null,
+            placeholder = painterResource(R.drawable.placeholder),
+            error = painterResource(R.drawable.error),
+            modifier = Modifier.size(120.dp)
+        )
+    }
+}
+```
+
+WRONG because `SubcomposeAsyncImage` creates a subcomposition for each item, which is significantly slower than regular composition. In a `LazyColumn`, items are composed during scroll — the subcomposition overhead accumulates and causes visible jank. `AsyncImage` with `placeholder`/`error` parameters achieves the same visual result without subcomposition.
+
+### Platform context in KMP
+
+```kotlin
+// WRONG — LocalContext is Android-only; compile error on iOS/Desktop/Web
+@Composable
+fun Avatar(url: String) {
+    AsyncImage(
+        model = ImageRequest.Builder(LocalContext.current) // breaks on non-Android
+            .data(url)
+            .build(),
+        contentDescription = null
+    )
+}
+
+// RIGHT — LocalPlatformContext works on all platforms
+@Composable
+fun Avatar(url: String) {
+    AsyncImage(
+        model = ImageRequest.Builder(LocalPlatformContext.current) // Android, iOS, Desktop, Web
+            .data(url)
+            .build(),
+        contentDescription = null
+    )
+}
+```
+
+WRONG because `LocalContext.current` is an Android-specific composition local that resolves to `android.content.Context`. In KMP projects, this causes compile errors in `commonMain`. `LocalPlatformContext.current` is Coil 3's multiplatform equivalent — it resolves to `Context` on Android and `PlatformContext.INSTANCE` on other targets.
+
 ## Checklist
 
 - [ ] `AsyncImage` preferred over other variants

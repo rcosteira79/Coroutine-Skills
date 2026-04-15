@@ -197,6 +197,93 @@ fun ArticleEntity.toDomain(): Article = Article(
 
 ---
 
+## RIGHT vs WRONG Patterns
+
+### DAO return types
+
+```kotlin
+// WRONG — suspend fun when the UI needs to observe ongoing changes
+@Dao
+interface ArticleDao {
+    @Query("SELECT * FROM articles")
+    suspend fun getAll(): List<ArticleEntity> // caller must re-query manually to see new inserts
+}
+
+// RIGHT — Flow for queries the UI observes; suspend for one-shot reads and mutations
+@Dao
+interface ArticleDao {
+    @Query("SELECT * FROM articles ORDER BY publishedAt DESC")
+    fun observeAll(): Flow<List<ArticleEntity>> // emits whenever table changes
+
+    @Query("SELECT * FROM articles WHERE id = :id")
+    suspend fun findById(id: String): ArticleEntity? // one-shot lookup — suspend is correct
+
+    @Upsert
+    suspend fun upsertAll(articles: List<ArticleEntity>) // mutation — suspend is correct
+}
+```
+
+WRONG when the UI needs to stay in sync with the database — a `suspend fun` query returns a single snapshot, so inserts or updates after the initial load are invisible to the caller. A `Flow` return type makes Room automatically re-emit whenever the underlying table changes. That said, `suspend fun` is the right choice for one-shot queries where the caller only needs the current state — e.g., checking if a record exists before inserting, or loading data that won't change during the screen's lifetime.
+
+### Exposing data layer types to the UI
+
+```kotlin
+// WRONG — ViewModel exposes Entity directly; couples UI to the database schema
+class ArticleViewModel(private val dao: ArticleDao) : ViewModel() {
+    val articles = dao.observeAll() // Flow<List<ArticleEntity>>
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyList())
+}
+
+// In UI — forced to work with raw DB fields:
+Text(Instant.ofEpochMilli(entity.publishedAt).toString()) // raw Long from Room
+
+// RIGHT — map at each layer boundary; UI works with UI models
+// Repository maps Entity → Domain (or directly to a model the ViewModel consumes):
+val articlesStream: Flow<List<Article>> = articleDao.observeAll()
+    .map { entities -> entities.map { it.toDomain() } }
+
+// ViewModel maps Domain → UI model:
+class ArticleViewModel(private val repository: ArticleRepository) : ViewModel() {
+    val articles = repository.articlesStream
+        .map { articles -> articles.map { it.toUiModel() } }
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyList())
+}
+
+// In UI — stable UI model with presentation-ready fields:
+Text(uiArticle.formattedDate) // formatting lives in toUiModel(), not in the domain
+```
+
+WRONG because the ViewModel exposes `ArticleEntity` directly to the UI, coupling it to the database schema — adding a column or renaming a field breaks the UI. The exact mapping chain depends on the architecture: with a domain layer, the repository maps Entity → Domain and the ViewModel maps Domain → UI model; without a domain layer, the ViewModel (or repository) maps the data model to a UI model directly. Either way, the UI works with stable UI models and never sees data layer types. Presentation logic like date formatting belongs in the UI model mapping, not in the domain model.
+
+### Error boundary placement
+
+```kotlin
+// WRONG — IOException and HttpException escape to the ViewModel
+class ArticleRepository(private val api: NewsApi, private val dao: ArticleDao) {
+    suspend fun refreshArticles() { // throws IOException, HttpException
+        val articles = api.fetchLatest()
+        dao.upsertAll(articles.map { it.toEntity() })
+    }
+}
+
+// ViewModel is forced to catch network exceptions it shouldn't know about
+
+// RIGHT — repository catches and maps to domain error types
+class ArticleRepository(private val api: NewsApi, private val dao: ArticleDao) {
+    suspend fun refreshArticles(): Result<Unit> = try {
+        val articles = api.fetchLatest()
+        dao.upsertAll(articles.map { it.toEntity() })
+        Result.success(Unit)
+    } catch (e: IOException) {
+        Result.failure(DataError.Network(e))
+    } catch (e: HttpException) {
+        Result.failure(DataError.Server(e.code(), e.message()))
+    }
+}
+```
+
+WRONG because uncaught `IOException` and `HttpException` force the ViewModel to import Retrofit and OkHttp types. The repository is the error boundary — it converts implementation-specific exceptions into domain error types that the rest of the app can handle without knowing the underlying network or storage implementation.
+
 ## Checklist
 
 - [ ] Repository exposes `Flow` for streams and `suspend fun` returning `Result<T>` for one-shot operations

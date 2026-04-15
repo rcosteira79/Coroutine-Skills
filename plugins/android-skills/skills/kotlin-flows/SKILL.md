@@ -332,6 +332,142 @@ lifecycleScope.launch {
 | Manual `Job?` cancellation + re-launch to restart a collection on new upstream value | Use `flatMapLatest` — it cancels the previous inner collection automatically when the upstream emits |
 | `mutableStateFlow.emit(value)` inside a coroutine | `emit()` on `MutableStateFlow` is suspending but equivalent to `.value = value` — use `.value =` instead; `emit()` misleads readers and adds unnecessary suspension |
 
+## RIGHT vs WRONG Patterns
+
+### Exception handling inside `collect`
+
+```kotlin
+// WRONG — swallows CancellationException, breaks structured concurrency
+repository.getItems()
+    .collect { items ->
+        try {
+            processItems(items)
+        } catch (e: Exception) { // catches CancellationException too!
+            logger.error(e)
+        }
+    }
+
+// RIGHT — catch only specific exceptions
+repository.getItems()
+    .collect { items ->
+        try {
+            processItems(items)
+        } catch (e: ProcessingException) {
+            logger.error(e)
+        }
+    }
+
+// RIGHT — if broad catch is unavoidable, rethrow CancellationException
+repository.getItems()
+    .collect { items ->
+        try {
+            processItems(items)
+        } catch (e: Exception) {
+            if (e is CancellationException) throw e
+            logger.error(e)
+        }
+    }
+
+// RIGHT — use Flow's catch operator for upstream errors (skips CancellationException automatically)
+repository.getItems()
+    .onEach { items -> processItems(items) }
+    .catch { e -> logger.error(e) }
+    .collect()
+```
+
+WRONG because `catch (e: Exception)` intercepts `CancellationException`, which prevents the coroutine from being cancelled. The flow keeps running even after the parent scope is cancelled, leaking resources. This is the single most common coroutine bug. Flow's `catch` operator is often the cleanest alternative — it catches exceptions from upstream operators (like `onEach` or `map`) and automatically skips `CancellationException`.
+
+### Side effects inside `combine`/`map` transforms
+
+```kotlin
+// WRONG — launches on every upstream emission AND every resubscription (rotation)
+val uiState = combine(userFlow, settingsFlow) { user, settings ->
+    viewModelScope.launch { analytics.logView(user.id) } // fires repeatedly
+    UiState(user, settings)
+}.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), UiState.Empty)
+
+// RIGHT — side effects in onEach, outside the transform
+val uiState = combine(userFlow, settingsFlow) { user, settings ->
+    UiState(user, settings)
+}
+.onEach { state -> analytics.logView(state.user.id) }
+.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), UiState.Empty)
+```
+
+WRONG because `combine` and `map` transforms are pure functions that re-execute on every upstream emission and on every resubscription (e.g., screen rotation with `WhileSubscribed`). Launching coroutines or emitting events inside them causes duplicate side effects.
+
+### Collecting one-shot events with `collectAsStateWithLifecycle`
+
+```kotlin
+// WRONG — preserves last event as state; re-consumed on recomposition
+val event by viewModel.events.collectAsStateWithLifecycle(initialValue = null)
+LaunchedEffect(event) {
+    event?.let { handleEvent(it) } // fires again after config change
+}
+
+// RIGHT — collect in LaunchedEffect; events are consumed once and discarded
+LaunchedEffect(Unit) {
+    viewModel.events.collect { event ->
+        handleEvent(event) // processes once, no state retention
+    }
+}
+```
+
+WRONG because `collectAsStateWithLifecycle` converts the flow emission into Compose state, which persists across recompositions. One-shot events (navigation, snackbars) get re-consumed on configuration changes because the state still holds the last value.
+
+### Manual `Job?` cancellation → `flatMapLatest`
+
+```kotlin
+// WRONG — manual Job lifecycle management; error-prone, verbose
+class SearchViewModel : ViewModel() {
+    private var searchJob: Job? = null
+
+    fun onQueryChanged(query: String) {
+        searchJob?.cancel()
+        searchJob = viewModelScope.launch {
+            delay(300)
+            _results.value = repository.search(query)
+        }
+    }
+}
+
+// RIGHT — flatMapLatest cancels previous collection automatically
+class SearchViewModel : ViewModel() {
+    private val query = MutableStateFlow("")
+
+    val results = query
+        .debounce(300)
+        .flatMapLatest { q -> repository.searchFlow(q) }
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyList())
+
+    fun onQueryChanged(q: String) { query.value = q }
+}
+```
+
+WRONG because manual `Job?` tracking is fragile — easy to forget to cancel, easy to race between cancel and launch, and doesn't compose with other operators. `flatMapLatest` handles cancellation automatically and integrates with the reactive chain.
+
+### Hidden sequential flow inside transform
+
+```kotlin
+// WRONG — fetches user on EVERY article emission; sequential, not reactive
+val uiState = repository.getArticles()
+    .map { articles ->
+        val user = userRepository.getUser().first() // re-fetches every time
+        UiState(articles, user)
+    }
+    .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), UiState.Empty)
+
+// RIGHT — combine merges both flows reactively
+val uiState = combine(
+    repository.getArticles(),
+    userRepository.getUser()
+) { articles, user ->
+    UiState(articles, user)
+}.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), UiState.Empty)
+```
+
+WRONG because calling `.first()` inside a `map` lambda triggers a new collection of the inner flow on every upstream emission, creating hidden sequential I/O. `combine` merges both flows reactively — emitting whenever either changes — without redundant fetches.
+
 ## Testing
 
 **Ask the user before writing tests** — unless `android-skills:android-tdd` is active, in which case tests are written first as part of the TDD cycle.

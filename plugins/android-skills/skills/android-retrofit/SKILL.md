@@ -182,6 +182,114 @@ Inject it into `OkHttpClient` via the Hilt module.
 
 ---
 
+## RIGHT vs WRONG Patterns
+
+### `Response<T>` — use only when needed
+
+```kotlin
+// WRONG — wrapping every endpoint in Response<T> "just in case"
+// Forces callers to check isSuccessful and handle nullable body, even when only the body matters
+@GET("users/{user}/repos")
+suspend fun listRepos(@Path("user") user: String): Response<List<Repo>>
+
+// In repository — verbose and error-prone:
+val response = service.listRepos(user)
+if (response.isSuccessful) {
+    Result.success(response.body()!!) // nullable body needs !! or ?. handling
+} else {
+    Result.failure(DataError.Server(response.code(), response.message()))
+}
+
+// RIGHT — direct return; Retrofit throws HttpException on non-2xx automatically
+@GET("users/{user}/repos")
+suspend fun listRepos(@Path("user") user: String): List<Repo>
+
+// In repository — clean:
+try {
+    Result.success(service.listRepos(user)) // non-null, direct
+} catch (e: HttpException) {
+    Result.failure(DataError.Server(e.code(), e.message()))
+}
+```
+
+RIGHT because direct return types are non-null and throw `HttpException` on non-2xx, giving you a clean try/catch at the repository level. Use `Response<T>` only when you need the error body content (e.g., validation messages) or response headers.
+
+### Network exceptions leaking to ViewModel
+
+```kotlin
+// WRONG — ViewModel catches HttpException directly; couples UI layer to network internals
+class RepoViewModel(private val service: GitHubService) : ViewModel() {
+    fun loadRepos(user: String) {
+        viewModelScope.launch {
+            try {
+                _uiState.value = UiState.Success(service.listRepos(user))
+            } catch (e: HttpException) { // ViewModel knows about HTTP
+                _uiState.value = UiState.Error("Server error: ${e.code()}")
+            } catch (e: IOException) { // ViewModel knows about IO
+                _uiState.value = UiState.Error("Network error")
+            }
+        }
+    }
+}
+
+// RIGHT — repository maps to domain errors; ViewModel handles domain types only
+class RepoViewModel(private val repository: GitHubRepository) : ViewModel() {
+    fun loadRepos(user: String) {
+        viewModelScope.launch {
+            repository.listRepos(user)
+                .onSuccess { repos -> _uiState.value = UiState.Success(repos) }
+                .onFailure { error ->
+                    _uiState.value = when (error) {
+                        is DataError.Network -> UiState.Error("Check your connection")
+                        is DataError.Server -> UiState.Error("Something went wrong")
+                        else -> UiState.Error("Unknown error")
+                    }
+                }
+        }
+    }
+}
+```
+
+WRONG because the ViewModel directly depends on Retrofit/OkHttp exception types. If you later swap Retrofit for Ktor, or add a cache layer, every ViewModel must change. The repository is the boundary — it maps network exceptions to domain error types that the ViewModel can handle without knowing the network implementation.
+
+### Auth token: interceptor vs `@Header`
+
+```kotlin
+// WRONG — token parameter on every endpoint; easy to forget, duplicates logic
+@GET("user/profile")
+suspend fun getProfile(@Header("Authorization") token: String): Profile
+
+@GET("user/settings")
+suspend fun getSettings(@Header("Authorization") token: String): Settings
+
+// Caller must pass token every time — copy-paste prone:
+service.getProfile("Bearer $token")
+service.getSettings("Bearer $token")
+
+// RIGHT — interceptor adds token automatically to all requests
+class AuthInterceptor(private val tokenProvider: TokenProvider) : Interceptor {
+    override fun intercept(chain: Interceptor.Chain): Response {
+        val token = tokenProvider.getToken()
+            ?: throw IOException("Auth token unavailable") // fail fast — see note below
+        val request = chain.request().newBuilder()
+            .header("Authorization", "Bearer $token")
+            .build()
+        return chain.proceed(request)
+    }
+}
+
+// Clean service interface — no auth boilerplate:
+@GET("user/profile")
+suspend fun getProfile(): Profile
+
+@GET("user/settings")
+suspend fun getSettings(): Settings
+```
+
+WRONG because adding `@Header("Authorization")` to every endpoint is repetitive and fragile — one missing parameter means an unauthenticated request that fails at runtime, not compile time. An OkHttp interceptor applies the token uniformly to all requests.
+
+> **Throw vs proceed:** Throw when all endpoints require auth — a missing token should surface immediately rather than producing a confusing 401. If the `OkHttpClient` is shared between authenticated and public endpoints, proceed without the header instead: `?: return chain.proceed(chain.request())`.
+
 ## Checklist
 
 - [ ] All service functions are `suspend`
