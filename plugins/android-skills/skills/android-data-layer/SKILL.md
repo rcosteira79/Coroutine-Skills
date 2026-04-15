@@ -197,6 +197,91 @@ fun ArticleEntity.toDomain(): Article = Article(
 
 ---
 
+## RIGHT vs WRONG Patterns
+
+### DAO return types
+
+```kotlin
+// WRONG — suspend fun for data the UI needs to observe; returns a snapshot, misses updates
+@Dao
+interface ArticleDao {
+    @Query("SELECT * FROM articles")
+    suspend fun getAll(): List<ArticleEntity> // one-shot; UI won't see new inserts
+}
+
+// RIGHT — Flow for observable queries; suspend for one-shot reads and mutations
+@Dao
+interface ArticleDao {
+    @Query("SELECT * FROM articles ORDER BY publishedAt DESC")
+    fun observeAll(): Flow<List<ArticleEntity>> // emits whenever table changes
+
+    @Query("SELECT * FROM articles WHERE id = :id")
+    suspend fun findById(id: String): ArticleEntity? // one-shot lookup is fine
+
+    @Upsert
+    suspend fun upsertAll(articles: List<ArticleEntity>) // mutation — suspend is correct
+}
+```
+
+WRONG because a `suspend fun` query returns a single snapshot. When new data is inserted (e.g., after a network refresh), the UI has no way to know — it must manually re-query. A `Flow` return type makes Room automatically re-emit whenever the underlying table changes, keeping the UI in sync without manual refresh logic.
+
+### Exposing data layer types to ViewModel
+
+```kotlin
+// WRONG — ViewModel uses Entity directly; leaks DB schema to UI layer
+class ArticleViewModel(private val dao: ArticleDao) : ViewModel() {
+    val articles = dao.observeAll() // Flow<List<ArticleEntity>>
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyList())
+}
+
+// In UI — forced to work with raw DB fields:
+Text(Instant.ofEpochMilli(entity.publishedAt).toString()) // raw Long from Room
+
+// RIGHT — repository maps Entity → Domain model; ViewModel exposes domain types
+class ArticleViewModel(private val repository: ArticleRepository) : ViewModel() {
+    val articles = repository.articlesStream // Flow<List<Article>>
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyList())
+}
+
+// In repository:
+val articlesStream: Flow<List<Article>> = articleDao.observeAll()
+    .map { entities -> entities.map { it.toDomain() } }
+
+// In UI — clean domain types:
+Text(article.formattedDate) // already formatted in domain model
+```
+
+WRONG because the ViewModel depends on Room's `ArticleEntity`, which is tied to the database schema. If you add a column, rename a field, or change the table structure, the UI layer breaks. The repository should map entities to domain models — the ViewModel and UI only depend on the stable domain contract.
+
+### Error boundary placement
+
+```kotlin
+// WRONG — IOException and HttpException escape to the ViewModel
+class ArticleRepository(private val api: NewsApi, private val dao: ArticleDao) {
+    suspend fun refreshArticles() { // throws IOException, HttpException
+        val articles = api.fetchLatest()
+        dao.upsertAll(articles.map { it.toEntity() })
+    }
+}
+
+// ViewModel is forced to catch network exceptions it shouldn't know about
+
+// RIGHT — repository catches and maps to domain error types
+class ArticleRepository(private val api: NewsApi, private val dao: ArticleDao) {
+    suspend fun refreshArticles(): Result<Unit> = try {
+        val articles = api.fetchLatest()
+        dao.upsertAll(articles.map { it.toEntity() })
+        Result.success(Unit)
+    } catch (e: IOException) {
+        Result.failure(DataError.Network(e))
+    } catch (e: HttpException) {
+        Result.failure(DataError.Server(e.code(), e.message()))
+    }
+}
+```
+
+WRONG because uncaught `IOException` and `HttpException` force the ViewModel to import Retrofit and OkHttp types. The repository is the error boundary — it converts implementation-specific exceptions into domain error types that the rest of the app can handle without knowing the underlying network or storage implementation.
+
 ## Checklist
 
 - [ ] Repository exposes `Flow` for streams and `suspend fun` returning `Result<T>` for one-shot operations
