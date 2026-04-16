@@ -17,22 +17,6 @@ Install as a plugin to get all skills:
 
 Updates are picked up automatically when the plugin version is bumped.
 
-#### MCP server (recommended)
-
-For enhanced source code navigation (local source sync, Tree-sitter parsing, class hierarchy, LSP), install [android-source-explorer-mcp](https://github.com/mrmike/android-source-explorer-mcp) separately:
-
-```bash
-uv tool install git+https://github.com/mrmike/android-source-explorer-mcp
-```
-
-The `android-source-search` skill will automatically use the MCP tools if available, and falls back to Gitiles/GitHub otherwise.
-
-#### Android CLI (recommended)
-
-Several skills — notably [`compose`](plugins/android-skills/skills/compose/SKILL.md) and [`android-debugging`](plugins/android-skills/skills/android-debugging/SKILL.md) — have CLI-native shortcuts when Google's `android` CLI is installed: documentation search over the Android Knowledge Base (`android docs`), runtime UI layout inspection (`android layout`), device/emulator orchestration, and SDK management. The skills still work without it, but recommend installing it for the best experience.
-
-Follow Google's installation instructions: <https://developer.android.com/tools/agents/android-cli>
-
 ### Claude Code (manual)
 
 Alternatively, copy the skill directories into your Claude Code skills folder:
@@ -41,8 +25,6 @@ Alternatively, copy the skill directories into your Claude Code skills folder:
 git clone https://github.com/rcosteira79/android-skills.git
 cp -r android-skills/plugins/android-skills/skills/* ~/.claude/skills/
 ```
-
-Note: the manual approach does not include the MCP server. See the optional MCP section above.
 
 ### Copilot CLI (plugin)
 
@@ -55,6 +37,26 @@ copilot plugin install rcosteira79/android-skills
 ### Other agentic editors
 
 Each skill is self-contained — the `SKILL.md` files are plain markdown, so they can be adapted to other editors that support custom instructions.
+
+### Recommended companion tools
+
+The skills work standalone, but several integrate with external tools for enhanced capabilities. Both are independent of the plugin install — use them alongside whichever agent you choose.
+
+#### android-source-explorer MCP
+
+For enhanced source code navigation (local source sync, Tree-sitter parsing, class hierarchy, LSP), install [android-source-explorer-mcp](https://github.com/mrmike/android-source-explorer-mcp):
+
+```bash
+uv tool install git+https://github.com/mrmike/android-source-explorer-mcp
+```
+
+The `android-source-search` and `compose` skills automatically use the MCP tools when available, and fall back to Gitiles/GitHub otherwise.
+
+#### Android CLI
+
+Several skills — notably [`compose`](plugins/android-skills/skills/compose/SKILL.md) and [`android-debugging`](plugins/android-skills/skills/android-debugging/SKILL.md) — have CLI-native shortcuts when Google's `android` CLI is installed: documentation search over the Android Knowledge Base (`android docs`), runtime UI layout inspection (`android layout`), device/emulator orchestration, and SDK management. The skills still work without it, but recommend installing it for the best experience.
+
+Follow Google's installation instructions: <https://developer.android.com/tools/agents/android-cli>
 
 ## Skills
 
