@@ -17,7 +17,7 @@ Install as a plugin to get all skills:
 
 Updates are picked up automatically when the plugin version is bumped.
 
-#### MCP server (optional)
+#### MCP server (recommended)
 
 For enhanced source code navigation (local source sync, Tree-sitter parsing, class hierarchy, LSP), install [android-source-explorer-mcp](https://github.com/mrmike/android-source-explorer-mcp) separately:
 
