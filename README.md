@@ -27,6 +27,12 @@ uv tool install git+https://github.com/mrmike/android-source-explorer-mcp
 
 The `android-source-search` skill will automatically use the MCP tools if available, and falls back to Gitiles/GitHub otherwise.
 
+#### Android CLI (recommended)
+
+Several skills — notably [`compose`](plugins/android-skills/skills/compose/SKILL.md) and [`android-debugging`](plugins/android-skills/skills/android-debugging/SKILL.md) — have CLI-native shortcuts when Google's `android` CLI is installed: documentation search over the Android Knowledge Base (`android docs`), runtime UI layout inspection (`android layout`), device/emulator orchestration, and SDK management. The skills still work without it, but recommend installing it for the best experience.
+
+Follow Google's installation instructions: <https://developer.android.com/tools/agents/android-cli>
+
 ### Claude Code (manual)
 
 Alternatively, copy the skill directories into your Claude Code skills folder:

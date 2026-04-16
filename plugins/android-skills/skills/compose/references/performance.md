@@ -357,6 +357,8 @@ In Android Studio:
 
 Recomposition counts display how many times each composable was recomposed since inspection started.
 
+For headless/CLI workflows (no IDE), use `android layout --diff --pretty` between two app states to get a JSON tree of which nodes changed. Combine with `SideEffect { Log.d(...) }` counters to correlate tree diffs with recomposition hot paths.
+
 ### Macrobenchmark — Frame Timing
 
 ```kotlin

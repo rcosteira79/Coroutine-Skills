@@ -145,3 +145,14 @@ compose-multiplatform-core (branch: jb-main)
 compose-multiplatform (resources library)
 └── components/resources/library/src/commonMain/
 ```
+
+## Authoritative Docs
+
+For guidance, best practices, or migration guides — things source code alone can't answer — prefer Google's Android Knowledge Base over web search:
+
+```bash
+android docs search "LazyColumn performance"              # ranked kb:// URLs + summaries
+android docs fetch kb://android/develop/ui/compose/lists  # full content of a result
+```
+
+4800+ curated docs across Android, Wear, TV, KMP, and Glance. Use this when the internal files in `references/` don't cover your question; use source code lookups (above) when you need implementation details rather than guidance.

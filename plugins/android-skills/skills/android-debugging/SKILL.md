@@ -101,13 +101,30 @@ Common patterns:
 ./gradlew assembleDebug --stacktrace --info 2>&1 | grep -A 20 "FAILED"
 ```
 
+### Runtime UI Inspection
+
+When a bug is visual (wrong element state, missing content, overlap), dump the layout tree directly instead of reasoning from a screenshot:
+
+```bash
+# Full layout tree as JSON — search by class/text/bounds instead of parsing an image
+android layout --pretty
+
+# Only elements that changed since last call — useful for animations or transient state
+android layout --diff --pretty
+
+# Target a specific device, write to file
+android layout --device=emulator-5554 -o layout.json
+```
+
+Prefer `android layout` over `adb screencap` whenever the question is "what is the UI state?" rather than "what does it look like?". The JSON tree is grep-able and survives `--diff` state across invocations.
+
 ### Compose Recomposition Bugs
 
 For deeper Compose performance analysis (stability, recomposition skipping, baseline profiles), see `android-skills:compose` → `references/performance.md`.
 
 Wrong state or unexpected re-renders:
 
-1. **Layout Inspector** (Android Studio) → enable "Show recomposition counts" to identify hot paths
+1. **Layout Inspector** (Android Studio) → enable "Show recomposition counts" to identify hot paths. For headless/CLI workflows, `android layout --diff` gives a JSON tree of what changed between frames.
 2. Add `SideEffect { Log.d("Recompose", "MyComposable recomposed") }` temporarily to confirm
 3. Check that `State` objects are not created inside the composition (use `remember`)
 4. Verify `equals()` on state data classes — a new object with same values still triggers recomposition if `equals` is not implemented
@@ -129,7 +146,7 @@ adb shell am start -n com.example.app/.MainActivity
 # Clear app data
 adb shell pm clear com.example.app
 
-# Take screenshot
+# Take screenshot (for visual diffing; for UI state bugs, prefer `android layout` — see Runtime UI Inspection)
 adb exec-out screencap -p > screen.png
 
 # View running processes
