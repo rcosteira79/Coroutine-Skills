@@ -101,6 +101,11 @@ Retrofit setup for Android — service interface patterns (`@GET`, `@POST`, `@Pa
 
 > Inspired by [awesome-android-agent-skills](https://github.com/new-silvermoon/awesome-android-agent-skills)
 
+### `kmp-ktor`
+Ktor client setup for KMP and Android — per-platform engine selection (OkHttp/Darwin/CIO), `kotlinx.serialization` configuration, bearer token auth with refresh via the `Auth` plugin, `MockEngine` testing, and error mapping at the repository boundary.
+
+> Inspired by [compose-skill](https://github.com/Meet-Miyani/compose-skill) (Meet-Miyani)
+
 ### `android-data-layer`
 Data layer implementation — Repository pattern as single source of truth, Room DAOs with `Flow`, offline-first strategies (stale-while-revalidate, outbox pattern), and model mapping between DTO/entity/domain types.
 
@@ -129,6 +134,7 @@ Gradle build optimisation — Build Scans, configuration cache, build cache, kap
 - [android-source-explorer-mcp](https://github.com/mrmike/android-source-explorer-mcp) — MCP server for navigating Android source code (optional, used by `android-source-search` skill)
 - [material-3-skill](https://github.com/hamen/material-3-skill) — comprehensive Material Design 3 reference covering 30+ components, design tokens, theming, responsive layout, and dynamic color across platforms
 - [compose_skill](https://github.com/hamen/compose_skill) — strict, evidence-based Compose audit skill that scores repos on performance, state management, side effects, and API quality using automated Compose Compiler reports
+- [compose-skill (Meet-Miyani)](https://github.com/Meet-Miyani/compose-skill) — broad Compose + KMP skill covering MVI/MVVM, Navigation 2 & 3, Ktor, Koin/Hilt, Room, DataStore, Paging, and iOS interop; inspired the `kmp-ktor` skill in this repo
 - [android-reverse-engineering-skill](https://github.com/SimoneAvogadro/android-reverse-engineering-skill) — Claude Code plugin for decompiling APKs, extracting API endpoints, and tracing call flows
 
 ## License
