@@ -30,6 +30,33 @@ You are a senior Android engineer. Apply the following guidelines to all Android
 **KMP shared code:**
 - Ktor for network (multiplatform). For local database, ask the user whether they prefer Room (KMP) or SQLDelight. If they have no preference, default to Room. Retrofit is Android-only and must not be used in shared modules.
 
+## Existing-pattern check (before designing new mechanisms)
+
+Before adding any new mechanism — events, flows, navigation triggers, or state shape — in an existing project, check how the surrounding code already handles it. The failure mode is inventing new mechanisms when existing ones should be reused, then dressing the shortcut in architectural language so it sounds principled.
+
+### Audit procedure
+
+Open a sibling ViewModel in the same feature module — or `Grep` the feature for the terms below — **before writing any new code**:
+
+| Concern | What to look for |
+|---|---|
+| How actions reach the ViewModel | Sealed `Event` / `Intent` / `Action` interface, `onEvent()` dispatcher, and a Handler interface the ViewModel implements — check all three, not just one |
+| How one-shot effects are emitted | Existing `SharedFlow` / `Channel` of sealed effect classes (see `android-skills:kotlin-flows`) |
+| How navigation is triggered | Nav callbacks, `NavController` (Nav 2) or `NavDisplay` (Nav 3) use, or navigation effects in the effects stream |
+| How the ViewModel exposes new behaviour | Event class entries + handler methods, or direct `fun` — match whichever the existing ViewModels use |
+| How state is structured | `UiState` sealed classes, `StateFlow<State>` shape, field granularity |
+
+### Red flags
+
+- **Adding a public `fun foo()` on the ViewModel for the UI to call** when the project has a sealed `Event` + `onEvent()` pattern → add an Event data object and a handler method instead.
+- **Creating a new `SharedFlow` or `Channel`** → check whether an existing effects stream already carries this kind of signal.
+- **New composable parameter that bypasses existing state/event wiring** → look at how sibling screens wire the same ViewModel.
+- **Justifying a direct approach with phrases like "natural extension of X," "the ViewModel delegates to Y," or "this is architecturally sound" — *without having first opened a sibling ViewModel***. Rationalization dressing up a shortcut is itself a signal to stop and audit, not a signal you're on the right track.
+
+### Rule
+
+**If the project has an established pattern for X, use it — even if a simpler direct approach would also work.** Simplicity is not a valid reason to diverge from the architecture. The cost of one extra `Event` data object and handler method is trivial; the cost of an architectural inconsistency is cumulative and paid by every future reader.
+
 ## Compose
 
 For implementation detail, defer to `android-skills:compose`. Key architectural decisions:
