@@ -99,11 +99,6 @@ Triggered only when you explicitly ask to migrate. Assesses complexity, maps RxJ
 
 > Incorporates material from [awesome-android-agent-skills](https://github.com/new-silvermoon/awesome-android-agent-skills)
 
-### `xml-to-compose-migration`
-Migrate Android XML layouts to Jetpack Compose — layout mapping tables (RecyclerView → LazyColumn, LinearLayout → Column/Row, etc.), attribute mapping, state migration from LiveData/ViewBinding, and incremental adoption via `ComposeView`.
-
-> Incorporates material from [awesome-android-agent-skills](https://github.com/new-silvermoon/awesome-android-agent-skills)
-
 ### `android-retrofit`
 Retrofit setup for Android — service interface patterns (`@GET`, `@POST`, `@Path`, `@Query`, `@Body`), coroutines integration, OkHttp configuration, Hilt module, and error handling in the repository layer.
 
@@ -133,6 +128,10 @@ Scalable Gradle build logic — Convention Plugins, composite builds, shared `co
 Gradle build optimisation — Build Scans, configuration cache, build cache, kapt→KSP migration, parallel execution, lazy task configuration, and a recommended `gradle.properties` baseline.
 
 > Inspired by [awesome-android-agent-skills](https://github.com/new-silvermoon/awesome-android-agent-skills)
+
+## Removed skills
+
+- **`xml-to-compose-migration`** — dropped in favour of Google's actively-maintained [`migrate-xml-views-to-jetpack-compose`](https://github.com/android/skills/tree/main/jetpack-compose/migration), available via the [`android/skills`](https://github.com/android/skills) repo.
 
 ## Related Projects
 
