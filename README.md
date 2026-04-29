@@ -40,7 +40,7 @@ Each skill is self-contained — the `SKILL.md` files are plain markdown, so the
 
 ### Recommended companion tools
 
-The skills work standalone, but several integrate with external tools for enhanced capabilities. Both are independent of the plugin install — use them alongside whichever agent you choose.
+The skills work standalone, but several integrate with external tools for enhanced capabilities. These are independent of the plugin install — use them alongside whichever agent you choose.
 
 #### android-source-explorer MCP
 
@@ -51,6 +51,10 @@ uv tool install git+https://github.com/mrmike/android-source-explorer-mcp
 ```
 
 The `android-source-search` and `compose` skills automatically use the MCP tools when available, and fall back to Gitiles/GitHub otherwise.
+
+#### IntelliJ Index MCP
+
+For semantic navigation of your project's code via the IDE's symbol index, install [jetbrains-index-mcp-plugin](https://github.com/hechtcarmel/jetbrains-index-mcp-plugin) in Android Studio or IntelliJ. The agent uses it for type-hierarchy queries — finding implementations, overrides, callers, references through typealiases — with much higher recall than text search alone. Particularly valuable for the `compose`, `android-debugging`, `android-tdd`, and `rxjava-migration` skills. Requires the IDE running with the project indexed.
 
 #### Android CLI
 
