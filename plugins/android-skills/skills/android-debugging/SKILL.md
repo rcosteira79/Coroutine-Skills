@@ -1,6 +1,9 @@
 ---
 name: android-debugging
-description: Use when debugging Android or KMP issues — supplements superpowers:systematic-debugging with Android-specific techniques: Logcat, ADB, ANR traces, R8 stack trace decoding, memory leaks, Gradle build failures, and Compose recomposition bugs.
+description: >
+  Use when debugging Android or KMP issues — supplements superpowers:systematic-debugging
+  with Android-specific techniques covering Logcat, ADB, ANR traces, R8 stack trace decoding,
+  memory leaks, Gradle build failures, and Compose recomposition bugs.
 ---
 
 # Android Debugging

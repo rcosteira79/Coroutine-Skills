@@ -1,20 +1,17 @@
 ---
 name: compose
 description: >
-  Compose and Compose Multiplatform expert skill for UI development across Android, Desktop,
-  iOS, and Web. Guides state management, view composition, animations, navigation, performance,
-  design-to-code workflows, and production crash patterns. Backed by actual source code analysis
-  from both androidx/androidx and JetBrains/compose-multiplatform-core.
-  Use this skill whenever the user mentions Compose, @Composable, remember, LaunchedEffect,
-  Scaffold, NavHost, MaterialTheme, LazyColumn, Modifier, recomposition, Style, styleable,
-  MutableStyleState, Compose Multiplatform, CMP, KMP, commonMain, expect, actual,
-  ComposeUIViewController, Window composable, UIKitView, ComposeViewport, Res.drawable,
-  Res.string, or any Compose API. Also trigger when the user says "Android UI", "Kotlin UI",
-  "compose layout", "compose navigation", "compose animation", "material3", "compose styles",
-  "compose multiplatform", "desktop compose", "iOS compose", "compose web", "design to compose",
-  "build this UI", "implement this design", or asks about modern Kotlin UI development patterns.
-  Even casual mentions like "my compose screen is slow" or "how do I pass data between screens"
-  should trigger this skill.
+  Compose and Compose Multiplatform expert for UI development across Android, Desktop, iOS,
+  and Web. Covers state management, composition, animations, navigation, performance,
+  design-to-code workflows, and production crash patterns, backed by source analysis from
+  androidx/androidx and JetBrains/compose-multiplatform-core. Use whenever the user mentions
+  Compose, @Composable, remember, LaunchedEffect, Scaffold, NavHost, MaterialTheme,
+  LazyColumn, Modifier, recomposition, Compose Multiplatform/CMP, commonMain, expect/actual,
+  ComposeUIViewController, UIKitView, ComposeViewport, Res.drawable/Res.string, or any
+  Compose API. Also trigger on phrases like "Android/Kotlin UI", "compose layout/navigation/animation",
+  "material3", "desktop/iOS/web compose", "design to compose", "build this UI",
+  "implement this design", or any modern Kotlin UI question — including casual mentions
+  like "my compose screen is slow".
 ---
 
 # Compose Expert Skill
