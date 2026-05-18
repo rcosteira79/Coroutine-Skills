@@ -8,10 +8,10 @@ description: >
   Compose, @Composable, remember, LaunchedEffect, Scaffold, NavHost, MaterialTheme,
   LazyColumn, Modifier, recomposition, Compose Multiplatform/CMP, commonMain, expect/actual,
   ComposeUIViewController, UIKitView, ComposeViewport, Res.drawable/Res.string, or any
-  Compose API. Also trigger on phrases like "Android/Kotlin UI", "compose layout/navigation/animation",
-  "material3", "desktop/iOS/web compose", "design to compose", "build this UI",
+  Compose API. Also trigger on phrases like "design to compose", "build this UI",
   "implement this design", or any modern Kotlin UI question — including casual mentions
-  like "my compose screen is slow".
+  like "my compose screen is slow". Plus focus topics: FocusRequester,
+  focusProperties, onPreviewKeyEvent, D-pad, TV remote, ChromeOS, androidx.tv.material3.
 ---
 
 # Compose Expert Skill
@@ -53,6 +53,7 @@ Read the relevant reference file(s) from `references/` before answering:
 | Touch targets, spacing, canonical layouts, foldables, M3 compliance audit | `android-skills:android-ux` |
 | Recomposition skipping, stability, baseline profiles, benchmarking | `references/performance.md` |
 | Semantics, content descriptions, traversal order, testing | `references/accessibility.md` |
+| `FocusRequester`, `focusable()`, `focusProperties`, key events, D-pad, TV, keyboard, focus restoration | `references/focus-navigation.md` |
 | Removed/replaced APIs, migration paths from older Compose versions | `references/deprecated-patterns.md` |
 | **Styles API** (experimental): `Style {}`, `MutableStyleState`, `Modifier.styleable()` | `references/styles-experimental.md` |
 | Figma/screenshot decomposition, design tokens, spacing, modifier ordering | `references/design-to-compose.md` |
