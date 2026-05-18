@@ -373,7 +373,7 @@ stringResource(Res.string.greeting)
 
 **1. `LocalContext.current` sprinkled everywhere**
 
-There is no KMP replacement for Android `Context`. Every usage must be audited and abstracted.
+There is no KMP replacement for Android `Context`. Every usage must be audited and abstracted. **Prefer a common interface bound per platform over `expect fun`** — interfaces are fakeable in common tests, and Android UI services like share need an `Activity`, not `applicationContext`.
 
 ```kotlin
 // Bad: Context usage scattered in composables
@@ -386,23 +386,39 @@ fun ShareButton(text: String) {
     }) { Text("Share") }
 }
 
-// Good: Abstract behind expect/actual
+// Good: common interface with Activity-owned Android binding
 // commonMain
-expect fun shareText(text: String)
+interface ShareSheet {
+    /**
+     * Launches the system share sheet. Returns when the sheet is presented —
+     * NOT when the user completes or cancels the share.
+     */
+    suspend fun shareText(text: String)
+}
 
-// androidMain
-actual fun shareText(text: String) {
-    val intent = Intent(Intent.ACTION_SEND).apply { putExtra(Intent.EXTRA_TEXT, text) }
-    applicationContext.startActivity(intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK))
+// androidMain — Activity-owned, no FLAG_ACTIVITY_NEW_TASK lifecycle hack
+class AndroidShareSheet(private val activity: Activity) : ShareSheet {
+    override suspend fun shareText(text: String) {
+        val intent = Intent(Intent.ACTION_SEND)
+            .setType("text/plain")
+            .putExtra(Intent.EXTRA_TEXT, text)
+        activity.startActivity(Intent.createChooser(intent, null))
+    }
 }
 
 // iosMain
-actual fun shareText(text: String) {
-    val controller = UIActivityViewController(listOf(text), null)
-    UIApplication.sharedApplication.keyWindow?.rootViewController
-        ?.presentViewController(controller, true, null)
+class IosShareSheet : ShareSheet {
+    override suspend fun shareText(text: String) {
+        val controller = UIActivityViewController(activityItems = listOf(text), applicationActivities = null)
+        UIApplication.sharedApplication.keyWindow?.rootViewController
+            ?.presentViewController(controller, animated = true, completion = null)
+    }
 }
 ```
+
+**Why `applicationContext + FLAG_ACTIVITY_NEW_TASK` is wrong:** the share sheet is a UI operation and needs a foreground Activity. `applicationContext.startActivity(...)` requires `FLAG_ACTIVITY_NEW_TASK` because the Application has no current task — and that flag papers over the missing lifecycle ownership. The Activity-owned binding makes the requirement explicit and gives you somewhere to add result handling later if needed.
+
+**Why an interface, not `expect fun`:** an `expect fun` can't be faked in common tests without a real platform runtime, and a free function can't hold an `Activity` reference. An interface bound in the platform DI layer holds the lifecycle owner explicitly and is trivially fakeable. See `android-skills:kmp-boundaries` for the broader rule.
 
 **2. Compose Compiler 2.0.0 incorrect stability inference on non-JVM targets**
 
